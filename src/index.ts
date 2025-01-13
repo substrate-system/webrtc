@@ -1,7 +1,7 @@
-import { createDebug } from '@substrate-system/debug'
+import Debug from '@substrate-system/debug'
 import { createNanoEvents } from 'nanoevents'
 import { type BrowserRtc, getBrowserRTC } from './get-browser-rtc'
-const debug = createDebug()
+const debug = Debug()
 
 type PeerOpts = {
     config:RTCConfiguration;

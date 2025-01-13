@@ -23,7 +23,8 @@
     }
   },
   "scripts": {
-    "lint": "eslint \"./**/*.{ts,js}\" && npm run stylelint",
+    "lint": "eslint \"./**/*.{ts,js}\"",
+    "lint:all": "npm run lint && npm run stylelint",
     "stylelint": "stylelint \"**/*.css\"",
     "build-tests": "esbuild test/index.ts --target=es2020 --bundle --keep-names > test/test-bundle.js",
     "test": "npm run lint && npm run build && npm run build-tests && npm run test-tape-run",

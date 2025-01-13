@@ -35,6 +35,7 @@ body {
     }
 
     & input {
+        border: 1px solid transparent;
         outline: 2px solid;
         padding: 6px!important;
         /* border: 3px solid transparent; */
@@ -42,7 +43,10 @@ body {
 
         &:focus {
             outline: 2px solid transparent!important;
-            border-bottom: 3px solid var(--primary-color)!important;
+            border-color: initial;
+            border: 1px solid;
+            /* border-color: var(--primary-color)!important; */
+            border-bottom-color: var(--primary-color)!important;
         }
     }
 }

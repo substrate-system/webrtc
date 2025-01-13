@@ -28,18 +28,30 @@ type PeerOpts = {
 
 export class Peer {
     private _wrtc:BrowserRtc
-    private _peerConnection:RTCPeerConnection
+    private _pc:RTCPeerConnection
     config?:RTCConfiguration
 
-    constructor (opts:Partial<PeerOpts>) {
+    constructor (opts:Partial<PeerOpts> = {}) {
         debug('constructing', opts)
 
         const rtc = getBrowserRTC()
         if (!rtc) throw new Error('RTC does not exist')
         this._wrtc = rtc
         this.config = opts.config
-        this._peerConnection = new this._wrtc.RTCPeerConnection(
+        this._pc = new this._wrtc.RTCPeerConnection(
             this.config,
         )
+    }
+
+    connect () {
+        const channel = this._pc.createDataChannel('abc')
+        channel.onopen = (ev) => {
+            debug('got "open" event', ev)
+            channel.send('Hello')
+        }
+
+        channel.onmessage = (ev) => {
+            debug('got a message', ev.data)
+        }
     }
 }

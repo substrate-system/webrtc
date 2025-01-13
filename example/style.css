@@ -4,17 +4,29 @@ body {
     & > div {
         max-width: 30rem;
         margin: 0 auto;
-        margin-top: 4rem;
     }
+}
+
+.status {
+    border-bottom: 2px solid;
+
+    &.disconnected {
+        border-color: red;
+    }
+
+    &.connected {
+        border-color: green;
+    }
+}
+
+.controls {
+    display: flex;
+    margin-top: 4rem;
+    justify-content: space-around;
 }
 
 .input {
     outline: 2px solid;
-}
-
-.input-group input:focus ~ label,
-.input-group input:not(:placeholder-shown) ~ label {
-    top: -19px!important;
 }
 
 .input-group {
@@ -31,9 +43,10 @@ body {
     }
 }
 
-/* .input-group input:focus ~ label, .input-group input:not(:placeholder-shown) ~ label {
-    border: 3px solid red;
-} */
+.input-group input:focus ~ label,
+.input-group input:not(:placeholder-shown) ~ label {
+    top: -19px!important;
+}
 
 hr {
     margin: 2rem 0;
@@ -52,5 +65,16 @@ button {
         border-color: #00bfff;
         outline-color: #00bfff;
         background: seashell;
+    }
+
+    &:disabled {
+        cursor: not-allowed;
+
+        &:hover {
+            border-color: #1010104d;
+            /* outline: 1px solid rgba(16, 16, 16, 0.3); */
+            outline: none;
+            background-color: transparent;
+        }
     }
 }

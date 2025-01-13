@@ -23,7 +23,8 @@
     }
   },
   "scripts": {
-    "lint": "eslint \"./**/*.{ts,js}\"",
+    "lint": "eslint \"./**/*.{ts,js}\" && npm run stylelint",
+    "stylelint": "stylelint \"**/*.css\"",
     "build-tests": "esbuild test/index.ts --target=es2020 --bundle --keep-names > test/test-bundle.js",
     "test": "npm run lint && npm run build && npm run build-tests && npm run test-tape-run",
     "test-tape-run": "cat test/index.html | tape-run --input=html --static=test | tap-spec",
@@ -43,10 +44,13 @@
   },
   "dependencies": {
     "@nichoth/components": "^0.16.16",
+    "mitt": "^3.0.1",
+    "nanoevents": "^9.1.0",
     "webrtc-adapter": "^9.0.1"
   },
   "devDependencies": {
     "@preact/preset-vite": "^2.9.0",
+    "@preact/signals": "^2.0.0",
     "@substrate-system/debug": "^0.7.14",
     "@substrate-system/tapzero": "^0.10.13",
     "@typescript-eslint/eslint-plugin": "^8.0.0",
@@ -59,6 +63,8 @@
     "markdown-toc": "^1.2.0",
     "postcss-nesting": "^13.0.0",
     "preact": "^10.22.1",
+    "stylelint": "^16.13.0",
+    "stylelint-config-standard": "^37.0.0",
     "tap-spec": "^5.0.0",
     "tape-run": "^11.0.0",
     "typedoc": "^0.27.0",

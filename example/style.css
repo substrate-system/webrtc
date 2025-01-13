@@ -1,3 +1,7 @@
+:root {
+    --primary-color: #4285f4;
+}
+
 body {
     font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
 
@@ -25,20 +29,19 @@ body {
     justify-content: space-around;
 }
 
-.input {
-    outline: 2px solid;
-}
-
 .input-group {
     & label {
         top: 8px!important;
     }
 
     & input {
+        outline: 2px solid;
         padding: 6px!important;
+        border: 3px solid transparent;
 
         &:focus {
             outline: 2px solid transparent!important;
+            border-bottom: 3px solid var(--primary-color)!important;
         }
     }
 }

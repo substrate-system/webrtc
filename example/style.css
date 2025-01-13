@@ -43,8 +43,7 @@ body {
 
         &:focus {
             outline: 2px solid transparent!important;
-            border-color: initial;
-            border: 1px solid;
+            border: 1px solid black;
             /* border-color: var(--primary-color)!important; */
             border-bottom-color: var(--primary-color)!important;
         }

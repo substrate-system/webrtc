@@ -46,3 +46,11 @@ cp ./node_modules/@substrate-system/webrtc/dist/index.min.js ./public/webrtc.min
 ```js
 import { webrtc } from '@substrate-system/webrtc'
 ```
+
+## develop
+
+Start a local websocket server and also a `vite` server for the front-end:
+
+```sh
+npm start
+```

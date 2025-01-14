@@ -1,6 +1,3 @@
-// import adapter from 'webrtc-adapter'
-import 'webrtc-adapter'
-
 export type BrowserRtc = {
     RTCPeerConnection:typeof RTCPeerConnection;
     RTCSessionDescription:typeof RTCSessionDescription;

@@ -1,4 +1,5 @@
 {
+  "name": "@substrate-system/webrtc",
   "private": true,
   "type": "module",
   "version": "0.0.0",
@@ -46,9 +47,7 @@
   },
   "dependencies": {
     "@nichoth/components": "^0.16.16",
-    "mitt": "^3.0.1",
-    "nanoevents": "^9.1.0",
-    "webrtc-adapter": "^9.0.1"
+    "nanoevents": "^9.1.0"
   },
   "devDependencies": {
     "@preact/preset-vite": "^2.9.0",

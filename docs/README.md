@@ -1,5 +1,51 @@
 # notes
 
+* [cloudflare data channels](https://developers.cloudflare.com/calls/datachannels/)
+
+## [A Dead Simple WebRTC Example](https://ephemeral.cx/2014/09/a-dead-simple-webrtc-example/)
+
+> An ICE candidate is essentially a description of how to connect to a client.
+
+> In order for anyone to connect to us, we need to share our ICE candidates
+> with the other client. 
+
+> if we’re the caller (we clicked the start button), we **create an offer**
+> which tells the other client how to interact with us once the network
+> connection is established.
+>
+> The formal name for this called Session Description Protocol or SDP.
+
+> Once an RTCPeerConnection object is created, it will start gathering
+> ICE candidates.
+
+> Once we have an offer (`gotDescription` was called), we set the local
+> description to it and then send it to the signaling server to be sent to the
+> other client.
+
+This means once we have created an offer (an SDP about ourselves)
+
+Above is for client 1, the client who initiates connection.
+
+### What about the answering client?
+
+> we need to answer the incoming offer, not create a new offer.
+
+> 1. determine if the message is a description or an ICE candidate
+>
+> 2. If a description, we set it as the remote description on our
+> `RTCPeerConnection` object and then create an answer. 
+>
+> If the message is an ICE candidate, all we need to do is add the candidate
+> to the `RTCPeerConnection` object.
+
+
+
+----------------------------
+
+
+* [A simple RTCDataChannel sample](https://developer.mozilla.org/en-US/docs/Web/API/WebRTC_API/Simple_RTCDataChannel_sample)
+
+
 ## [signaling](https://webrtc.org/getting-started/peer-connections)
 
 ICE -- Internet Connectivity Establishment

@@ -2,36 +2,34 @@ import { type FunctionComponent, render } from 'preact'
 import { useCallback } from 'preact/hooks'
 import { html } from 'htm/preact'
 import { TextInput } from '@nichoth/components/htm/text-input'
-import { computed, signal } from '@preact/signals'
-import { Peer } from '../src/index.js'
+import { computed } from '@preact/signals'
+import { State } from './state'
 import '@nichoth/components/text-input.css'
 import Debug from '@substrate-system/debug'
 const debug = Debug()
 
-const peer = new Peer()
-
-debug('the peer', peer)
-
-const state = {
-    status: signal<'disconnected'|'connected'>('disconnected')
-}
+const state = State()
 
 const isConnected = computed(() => {
     return state.status.value === 'connected'
 })
+
+const { peer } = state
 
 // @ts-expect-error dev
 window.peer = peer
 
 peer.on('open', () => {
     state.status.value = 'connected'
+    debug('open')
 })
 
 peer.on('close', () => {
     state.status.value = 'disconnected'
+    debug('close')
 })
 
-const Example:FunctionComponent<unknown> = function () {
+const Example:FunctionComponent = function () {
     const connect = useCallback((ev:MouseEvent) => {
         ev.preventDefault()
         debug('connecting...')

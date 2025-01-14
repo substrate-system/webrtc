@@ -53,6 +53,7 @@ body {
 .input-group input:focus ~ label,
 .input-group input:not(:placeholder-shown) ~ label {
     top: -19px!important;
+    background-color: white!important;
 }
 
 hr {

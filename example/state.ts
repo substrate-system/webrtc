@@ -24,7 +24,7 @@ export const State = function ():{
     // And send a ping every 2 seconds right after
     party.addEventListener('open', () => {
         debug('Connected!')
-        debug('Sending a ping every 2 seconds...')
+        debug('Sending a ping every 3 seconds...')
 
         clearInterval(pingInterval)
         pingInterval = setInterval(() => {

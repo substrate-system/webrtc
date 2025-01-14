@@ -1,0 +1,6 @@
+{
+  "$schema": "https://www.partykit.io/schema.json",
+  "name": "rtcparty",
+  "main": "example/party-server.ts",
+  "compatibilityDate": "2025-01-14"
+}

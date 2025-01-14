@@ -4,6 +4,15 @@ export default class Server implements Party.Server {
     readonly room
     constructor (room:Party.Room) {
         this.room = room
+        console.log('room: ', room)
+    }
+
+    async onRequest (req:Party.Request):Promise<Response> {
+        if (req.method === 'GET') {
+            return new Response("It's working", { status: 200 })
+        }
+
+        return new Response('Invalid request method', { status: 405 })
     }
 
     onConnect (conn:Party.Connection, ctx:Party.ConnectionContext) {

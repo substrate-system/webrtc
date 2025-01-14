@@ -1,5 +1,22 @@
 # notes
 
+## health check for the websocket server
+
+### start the websocket server
+
+```sh
+npm run party
+```
+
+### check
+
+Visit the page `http://localhost:1999/parties/main/example` in a browser
+
+
+
+------------------------------------------------------------------------
+
+
 * [cloudflare data channels](https://developers.cloudflare.com/calls/datachannels/)
 
 ## [A Dead Simple WebRTC Example](https://ephemeral.cx/2014/09/a-dead-simple-webrtc-example/)

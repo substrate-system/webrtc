@@ -1,10 +1,10 @@
 import type { SignalMessage } from '../src/index.js'
 import type * as Party from 'partykit/server'
 
-const connections:Party.Connection[] = []
-
 export default class Server implements Party.Server {
     readonly room
+    private connections:Party.Connection[] = []
+
     constructor (room:Party.Room) {
         this.room = room
         console.log('room: ', room)
@@ -28,9 +28,11 @@ export default class Server implements Party.Server {
         )
 
         // send the list of other connections to the client
-        conn.send(JSON.stringify({ connections: connections.map(c => c.id) }))
+        conn.send(JSON.stringify({
+            connections: this.connections.map(c => c.id)
+        }))
 
-        connections.push(conn)
+        this.connections.push(conn)
 
         // let's send a message to the connection
         // conn.send('hello from server')
@@ -39,6 +41,7 @@ export default class Server implements Party.Server {
 
     onClose (party:Party.Connection) {
         this.room.broadcast('disconnected: ' + party.id)
+        this.connections = this.connections.filter(c => c.id !== party.id)
     }
 
     onMessage (message:string, sender:Party.Connection) {

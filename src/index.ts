@@ -1,7 +1,14 @@
 import Debug from '@substrate-system/debug'
 import { createNanoEvents } from 'nanoevents'
 import { type BrowserRtc, getBrowserRTC } from './get-browser-rtc'
+import type PartySocket from 'partysocket'
+export { type BrowserRtc } from './get-browser-rtc.js'
 const debug = Debug()
+
+export type SignalMessage = {
+    type:'offer'|'answer',
+    target:string
+}
 
 type PeerOpts = {
     config:RTCConfiguration;
@@ -37,6 +44,7 @@ export class Peer {
     private _wrtc:BrowserRtc
     private _pc:RTCPeerConnection
     private _emitter:ReturnType<typeof createNanoEvents<Events>>
+    makingOffer:boolean = false
     sendChannel?:RTCDataChannel  // RTCDataChannel for the local (sender)
     receiveChannel?:RTCDataChannel  // RTCDataChannel for the remote (receiver)
     channel?:RTCDataChannel
@@ -48,7 +56,6 @@ export class Peer {
         this._wrtc = rtc
         this.config = opts.config
         this._pc = new this._wrtc.RTCPeerConnection(this.config)
-
         this._emitter = createNanoEvents<Events>()
     }
 
@@ -70,9 +77,46 @@ export class Peer {
         }
     }
 
-    connect () {
-        this.channel = this._pc.createDataChannel('abc')
-        const channel = this.channel!
+    /**
+     * When you first connect to the websocket, it will send you a list
+     * of all the other peers in the room. If you are the second to connect,
+     * then you call `connect`, b/c you know the other user's ID. If you are
+     * first, then you should call `listen`.
+     */
+
+    /**
+     * this is called by the one initiating the connection
+     * (the second one to connect)
+     */
+    async connect (
+        party:InstanceType<typeof PartySocket>,
+        otherConnection?:string
+    ):Promise<void> {
+        const channel = this.channel = this._pc.createDataChannel('abc')
+
+        const pc = this._pc
+        pc.onnegotiationneeded = async () => {
+            try {
+                this.makingOffer = true
+                // @see https://developer.mozilla.org/en-US/docs/Web/API/WebRTC_API/Perfect_negotiation#the_perfect_negotiation_logic
+                //
+                // Note that setLocalDescription() without arguments
+                // automatically creates and sets the appropriate description
+                // based on the current signalingState.
+                await pc.setLocalDescription()
+                party.send(JSON.stringify({
+                    type: 'offer',
+                    target: otherConnection,
+                    description: pc.localDescription
+                }))
+            } catch (err) {
+                console.error(err)
+            } finally {
+                this.makingOffer = false
+            }
+        }
+
+        // pc.onicecandidate = ({ candidate }) => signaler.send({ candidate });
 
         channel.onopen = (ev) => {
             debug('got "open" event', ev)
@@ -92,6 +136,7 @@ export class Peer {
         debug('the channel', channel)
     }
 
+    // called by the first peer to join
     listen () {
         this._pc.ondatachannel = (ev:RTCDataChannelEvent) => {
             const receiveChannel = ev.channel

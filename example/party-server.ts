@@ -1,4 +1,7 @@
+import type { SignalMessage } from '../src/index.js'
 import type * as Party from 'partykit/server'
+
+const connections:Party.Connection[] = []
 
 export default class Server implements Party.Server {
     readonly room
@@ -16,16 +19,21 @@ export default class Server implements Party.Server {
     }
 
     onConnect (conn:Party.Connection, ctx:Party.ConnectionContext) {
-        // A websocket just connected!
-        console.log(
-        `Connected:
+        // a websocket just connected
+        console.log(`
+        Connected:
             id: ${conn.id}
             room: ${this.room.id}
             url: ${new URL(ctx.request.url).pathname}`
         )
 
+        // send the list of other connections to the client
+        conn.send(JSON.stringify({ connections: connections.map(c => c.id) }))
+
+        connections.push(conn)
+
         // let's send a message to the connection
-        conn.send('hello from server')
+        // conn.send('hello from server')
         this.room.broadcast('connected', [conn.id])
     }
 
@@ -36,12 +44,33 @@ export default class Server implements Party.Server {
     onMessage (message:string, sender:Party.Connection) {
         // let's log the message
         console.log(`connection ${sender.id} sent message: ${message}`)
+
+        let msg:SignalMessage
+        try {
+            msg = JSON.parse(message)
+        } catch (_err) {
+            console.log('not json...')
+            return
+        }
+
+        if (msg.type === 'offer' || msg.type === 'answer') {
+            // send the message to its target
+            const target = connections.find(conn => {
+                return conn.id === msg.target
+            })
+            if (!target) {
+                return console.error('not target: ' + msg.target)
+            }
+
+            target.send(message)
+        }
+
         // as well as broadcast it to all the other connections in the room...
-        this.room.broadcast(
-            `${sender.id}: ${message}`,
-            // ...except for the connection it came from
-            [sender.id]
-        )
+        // this.room.broadcast(
+        //     `${sender.id}: ${message}`,
+        //     // ...except for the connection it came from
+        //     [sender.id]
+        // )
     }
 }
 

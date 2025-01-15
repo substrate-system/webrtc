@@ -14,17 +14,17 @@ const isConnected = computed(() => {
     return state.status.value === 'connected'
 })
 
-const { peer } = state
+const { me } = state
 
 // @ts-expect-error dev
-window.peer = peer
+window.me = me
 
-peer.on('open', () => {
+me.on('open', () => {
     state.status.value = 'connected'
     debug('open')
 })
 
-peer.on('close', () => {
+me.on('close', () => {
     state.status.value = 'disconnected'
     debug('close')
 })
@@ -33,13 +33,13 @@ const Example:FunctionComponent = function () {
     const connect = useCallback((ev:MouseEvent) => {
         ev.preventDefault()
         debug('connecting...')
-        peer.connect()
+        me.connect()
     }, [])
 
     const listen = useCallback((ev:MouseEvent) => {
         ev.preventDefault()
         debug('listening...')
-        peer.listen()
+        me.listen()
     }, [])
 
     const sendMsg = useCallback((ev:SubmitEvent) => {
@@ -47,7 +47,7 @@ const Example:FunctionComponent = function () {
         const form = ev.target as HTMLFormElement
         const input = form.elements['text'].value
         debug('send the text', input)
-        peer.channel?.send(input)
+        me.channel?.send(input)
     }, [])
 
     return html`<div>

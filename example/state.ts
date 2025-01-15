@@ -4,18 +4,52 @@ import { Peer } from '../src/index.js'
 import Debug from '@substrate-system/debug'
 const debug = Debug()
 
+// https://ephemeral.cx/2014/09/a-dead-simple-webrtc-example/
+// An ICE candidate is essentially a description of how to connect to a client.
+
+const PEER_CONFIG = {
+    iceServers: [
+        { urls: 'stun:stun.l.google.com:19302' },
+        { urls: 'stun:stun.services.mozilla.com' },
+    ]
+}
+
 export const State = function ():{
     status:Signal<'disconnected'|'connected'>;
-    peer:Peer;
+    peerIds:Signal<string[]>;  // <-- this is other WS connections
+    first:Signal<boolean|null>;
+    me:Peer;
 } {  // eslint-disable-line indent
-    const peer = new Peer()
+    const me = new Peer({
+        config: PEER_CONFIG
+    })
     const party = Party()
     let pingInterval:ReturnType<typeof setInterval>
+
+    const state = {
+        me,
+        first: signal<boolean|null>(null),
+        peerIds: signal([]),
+        status: signal<'disconnected'|'connected'>('disconnected')
+    }
 
     // @ts-expect-error dev
     window.party = party
 
-    // You can even start sending messages before the connection is open!
+    party.addEventListener('message', function handleConnections (ev) {
+        try {
+            const msg = JSON.parse(ev.data)
+            if (msg.connections.length) {
+                // we are second
+                state.first.value = false
+            } else {
+                state.first.value = true
+            }
+        } catch (err) {
+            console.error('not json...', err)
+        }
+    })
+
     party.addEventListener('message', (ev) => {
         debug(`Received -> ${ev.data}`)
     })
@@ -32,10 +66,7 @@ export const State = function ():{
         }, 3000)
     })
 
-    return {
-        peer,
-        status: signal('disconnected')
-    }
+    return state
 }
 
 export default State

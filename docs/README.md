@@ -13,6 +13,14 @@
 > get a local description and send it using the signaling channel to the
 > remote peer.
 
+--------
+
+next
+
+[Handling incoming ICE candidates](https://developer.mozilla.org/en-US/docs/Web/API/WebRTC_API/Perfect_negotiation#handling_incoming_ice_candidates)
+
+> need to handle the RTCPeerConnection event icecandidate
+
 -------------
 
 ### [concepts](https://developer.mozilla.org/en-US/docs/Web/API/WebRTC_API/Perfect_negotiation#perfect_negotiation_concepts)

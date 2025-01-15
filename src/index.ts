@@ -7,13 +7,18 @@ const debug = Debug()
 
 export type SignalMessage = {
     type:'offer'|'answer',
-    target:string
+    target?:string,
+}|{
+    type:'icecandidate';
+    candidate:RTCIceCandidate|null;
+    target?:string;
 }
 
 type PeerOpts = {
     config:RTCConfiguration;
     allowHalfOpen:boolean;
     id:string;
+    party:InstanceType<typeof PartySocket>;
     channelName:string;
     initiator:boolean;
     channelConfig:any;
@@ -44,19 +49,21 @@ export class Peer {
     private _wrtc:BrowserRtc
     private _pc:RTCPeerConnection
     private _emitter:ReturnType<typeof createNanoEvents<Events>>
+    private _party:InstanceType<typeof PartySocket>
     makingOffer:boolean = false
     sendChannel?:RTCDataChannel  // RTCDataChannel for the local (sender)
     receiveChannel?:RTCDataChannel  // RTCDataChannel for the remote (receiver)
     channel?:RTCDataChannel
     config?:RTCConfiguration
 
-    constructor (opts:Partial<PeerOpts> = {}) {
+    constructor (opts:PartialExcept<PeerOpts, 'party'>) {
         const rtc = getBrowserRTC()
         if (!rtc) throw new Error('RTC does not exist')
         this._wrtc = rtc
         this.config = opts.config
         this._pc = new this._wrtc.RTCPeerConnection(this.config)
         this._emitter = createNanoEvents<Events>()
+        this._party = opts.party
     }
 
     on<E extends keyof Events> (ev:E, cb:Events[E]) {
@@ -89,10 +96,13 @@ export class Peer {
      * (the second one to connect)
      */
     async connect (
-        party:InstanceType<typeof PartySocket>,
-        otherConnection?:string
+        otherConnectionId?:string
     ):Promise<void> {
+        const party = this._party
         const channel = this.channel = this._pc.createDataChannel('abc')
+
+        // candidate message
+        // data: { description, candidate }
 
         const pc = this._pc
         pc.onnegotiationneeded = async () => {
@@ -106,7 +116,7 @@ export class Peer {
                 await pc.setLocalDescription()
                 party.send(JSON.stringify({
                     type: 'offer',
-                    target: otherConnection,
+                    target: otherConnectionId,
                     description: pc.localDescription
                 }))
             } catch (err) {
@@ -116,7 +126,29 @@ export class Peer {
             }
         }
 
-        // pc.onicecandidate = ({ candidate }) => signaler.send({ candidate });
+        pc.onicecandidate = (ev) => {
+            const { candidate } = ev
+            debug('got ice candidate', candidate)
+
+            const msg:SignalMessage = {
+                type: 'icecandidate',
+                target: otherConnectionId,
+                candidate
+            }
+
+            party.send(JSON.stringify(msg))
+        }
+
+        party.addEventListener('message', async ev => {
+            try {
+                const msg:{ description, candidate } = JSON.parse(ev.data)
+                if (!msg.description || !msg.candidate) return
+                await pc.setRemoteDescription(msg.description)
+            } catch (err) {
+                console.log('not json')
+                console.error(err)
+            }
+        })
 
         channel.onopen = (ev) => {
             debug('got "open" event', ev)

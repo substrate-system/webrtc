@@ -1,6 +1,7 @@
 import { signal, type Signal } from '@preact/signals'
 import { Party } from './party-client.js'
 import { Peer } from '../src/index.js'
+import type PartySocket from 'partysocket'
 import Debug from '@substrate-system/debug'
 const debug = Debug()
 
@@ -18,16 +19,19 @@ export const State = function ():{
     status:Signal<'disconnected'|'connected'>;
     peerIds:Signal<string[]>;  // <-- this is other WS connections
     first:Signal<boolean|null>;
+    party:InstanceType<typeof PartySocket>
     me:Peer;
 } {  // eslint-disable-line indent
+    const party = Party()
     const me = new Peer({
+        party,
         config: PEER_CONFIG
     })
-    const party = Party()
     let pingInterval:ReturnType<typeof setInterval>
 
     const state = {
         me,
+        party,
         first: signal<boolean|null>(null),
         peerIds: signal([]),
         status: signal<'disconnected'|'connected'>('disconnected')
@@ -45,6 +49,9 @@ export const State = function ():{
             } else {
                 state.first.value = true
             }
+
+            // we get the list of peers as the first message
+            party.removeEventListener('message', handleConnections)
         } catch (err) {
             console.error('not json...', err)
         }

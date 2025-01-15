@@ -80,8 +80,8 @@ button {
 
         &:hover {
             border-color: #1010104d;
+            outline: 2px solid transparent;
             /* outline: 1px solid rgba(16, 16, 16, 0.3); */
-            outline: none;
             background-color: transparent;
         }
     }

@@ -2,8 +2,8 @@ import { signal, type Signal } from '@preact/signals'
 import { Party } from './party-client.js'
 import { Peer } from '../src/index.js'
 import type PartySocket from 'partysocket'
-import Debug from '@substrate-system/debug'
-const debug = Debug()
+// import Debug from '@substrate-system/debug'
+// const debug = Debug()
 
 // https://ephemeral.cx/2014/09/a-dead-simple-webrtc-example/
 // An ICE candidate is essentially a description of how to connect to a client.
@@ -26,7 +26,6 @@ export const State = function ():{
         party,
         config: PEER_CONFIG
     })
-    // let pingInterval:ReturnType<typeof setInterval>
 
     const state = {
         me,
@@ -35,34 +34,14 @@ export const State = function ():{
         status: signal<'disconnected'|'connected'>('disconnected')
     }
 
-    me.on('change', ({ connections }) => {
-        debug('change', connections)
-        state.connections.value = connections
-    })
-
+    // @ts-expect-error dev
+    window.state = state
     // @ts-expect-error dev
     window.party = party
 
-    // party.addEventListener('message', function handleConnections (ev) {
-    //     try {
-    //         const msg = JSON.parse(ev.data)
-    //         if (msg.connections.length) {
-    //             // we are second
-    //             state.first.value = false
-    //         } else {
-    //             state.first.value = true
-    //         }
-
-    //         // we get the list of peers as the first message
-    //         // party.removeEventListener('message', handleConnections)
-    //     } catch (err) {
-    //         console.error('not json...', err)
-    //     }
-    // })
-
-    // party.addEventListener('message', (ev) => {
-    //     debug(`Received -> ${ev.data}`)
-    // })
+    me.on('change', ({ connections }) => {
+        state.connections.value = connections
+    })
 
     return state
 }

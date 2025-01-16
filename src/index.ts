@@ -51,7 +51,8 @@ export class Peer {
     private _pc:RTCPeerConnection
     private _emitter:ReturnType<typeof createNanoEvents<PeerEvents>>
     private _party:InstanceType<typeof PartySocket>
-    _connections:string[]|null
+    private _listening:boolean
+    _connections:string[]|null  // a list of other websocket peer IDs
     makingOffer:boolean
     sendChannel?:RTCDataChannel  // RTCDataChannel for the local (sender)
     receiveChannel?:RTCDataChannel  // RTCDataChannel for the remote (receiver)
@@ -64,12 +65,14 @@ export class Peer {
         if (!rtc) throw new Error('RTC does not exist')
         this.makingOffer = false
         this._wrtc = rtc
+
         this._connections = null
         this.config = opts.config
         this._pc = new this._wrtc.RTCPeerConnection(this.config)
         this._emitter = createNanoEvents<PeerEvents>()
         this.polite = null  // first peer to connect is polite
         this._party = opts.party
+        this._listening = false
 
         const self = this
 
@@ -77,7 +80,7 @@ export class Peer {
          * Handle 'connections' type messages
          * We use this to determine politeness
          */
-        this._party.addEventListener('message', function handleConnections (ev) {
+        this._party.addEventListener('message', (ev) => {
             let msg:ConnectionState
             try {
                 msg = JSON.parse(ev.data)
@@ -87,7 +90,7 @@ export class Peer {
             }
 
             const connections = msg.connections
-            if (!connections) return  // only listen to connections type
+            if (!connections) return  // only listen to connections messages
 
             debug('got a connection message:::::', connections)
             if ((connections.length > 1) && self.polite === null) {
@@ -98,6 +101,7 @@ export class Peer {
             }
 
             self._connections = connections
+            if (!this._listening) this._listen()
             self._emitter.emit('change', { connections })
         })
     }
@@ -120,33 +124,54 @@ export class Peer {
         }
     }
 
-    /**
-     * When you first connect to the websocket, it will give you a list
-     * of all the other peers in the room.
-     *
-     * If the list is empty except for you, then you are the first to connect.
-     */
-
     async connect ():Promise<void> {
-        const party = this._party
+        debug('connect called')
         const channel = this.channel = this._pc.createDataChannel('abc')
 
-        if (this._connections === null) {
-            // should not happen
-            //
-            // This is called in response to a button click;
-            // we should get the initial websocket message when the page loads,
-            // so this._connections will be an array, either empty or not.
-            throw new Error('null connections')
+        channel.onopen = (ev) => {
+            debug('got "open" event', ev)
+            this.handleSendChannelStatusChange(ev)
+            channel.send('Hello')
         }
 
-        const conns = this._connections
-        const otherConnectionId = conns.find(c => c !== this._party.id)
+        channel.onmessage = (ev) => {
+            debug('got a message in the channel', ev.data)
+        }
 
-        debug('the other id...', otherConnectionId)
+        channel.onclose = ev => {
+            debug('channel closed', ev)
+            this.handleSendChannelStatusChange(ev)
+        }
+    }
 
+    /**
+     * internal method
+     * listen for all the pc events
+     */
+    private _listen () {
+        this._listening = true
         const pc = this._pc
+        const party = this._party
+
+        pc.ondatachannel = (ev:RTCDataChannelEvent) => {
+            debug('______ on data channel ______')
+            const receiveChannel = ev.channel
+            receiveChannel.onmessage = ev => {
+                debug('got a message on receiveChannel', ev)
+            }
+
+            receiveChannel.onopen = ev => {
+                debug('channel opened...', ev)
+            }
+
+            receiveChannel.onclose = (ev) => {
+                debug('channel closed...', ev)
+            }
+        }
+
         pc.onnegotiationneeded = async () => {
+            debug('_______________on negotiation needed_______________')
+
             try {
                 // avoid race coditions by using this instead of signaling state
                 this.makingOffer = true
@@ -166,16 +191,36 @@ export class Peer {
                 await pc.setLocalDescription()
 
                 const msg:SignalMessage = {
-                    target: otherConnectionId,
+                    target: this._connections?.find(c => c !== this._party.id),
                     description: pc.localDescription!
                 }
+                debug('sending this.....negotiation needed...', msg)
                 party.send(JSON.stringify(msg))
             } catch (err) {
-                debug('error in onnegotiationneeded')
                 console.error(err)
             } finally {
                 this.makingOffer = false
             }
+        }
+
+        /**
+         * @see https://developer.mozilla.org/en-US/docs/Web/API/WebRTC_API/Perfect_negotiation#handling_incoming_ice_candidates
+         *
+         * How the local ICE layer passes candidates to us for delivery to the
+         * remote peer over the signaling channel.
+         */
+        pc.onicecandidate = (ev:RTCPeerConnectionIceEvent) => {
+            const { candidate } = ev
+
+            if (!candidate) return
+
+            const msg:SignalMessage = {
+                target: this._connections?.find(c => c !== this._party.id),
+                candidate: candidate.candidate
+            }
+
+            debug('sending this......ice candidate........', msg)
+            party.send(JSON.stringify(msg))
         }
 
         /**
@@ -192,32 +237,6 @@ export class Peer {
         }
 
         /**
-         * @see https://developer.mozilla.org/en-US/docs/Web/API/WebRTC_API/Perfect_negotiation#handling_incoming_ice_candidates
-         *
-         * How the local ICE layer passes candidates to us for delivery to the
-         * remote peer over the signaling channel.
-         */
-        let n = 0
-        pc.onicecandidate = (ev:RTCPeerConnectionIceEvent) => {
-            n++
-            const { candidate } = ev
-            debug('got ice candidate', candidate, n)
-
-            if (!candidate) {
-                return debug('not candidate!!!!!', ev)
-            }
-
-            const msg:SignalMessage = {
-                target: otherConnectionId,
-                candidate: candidate.candidate
-            }
-
-            debug('sending this message', msg)
-
-            party.send(JSON.stringify(msg))
-        }
-
-        /**
          * @see {@link https://developer.mozilla.org/en-US/docs/Web/API/WebRTC_API/Perfect_negotiation#handling_incoming_messages_on_the_signaling_channel MDN docs}
          *
          * > If the incoming message has a `description`, it's either an offer
@@ -230,11 +249,15 @@ export class Peer {
          */
         let ignoreOffer:boolean = false
         party.addEventListener('message', async ev => {
-            debug('______got a message method______', ev.data)
-
             try {
                 const msg:SignalMessage = JSON.parse(ev.data)
-                if (!('description' in msg) || !('candidate' in msg)) return
+                if (!(msg as any).connections) {  // filter connection updates
+                    debug('____the parsed message____', msg)
+                }
+
+                if (!(('description' in msg) || ('candidate' in msg))) return
+
+                debug('stilll going................', msg)
 
                 /**
                  * @see https://developer.mozilla.org/en-US/docs/Web/API/WebRTC_API/Perfect_negotiation#on_receiving_a_description
@@ -246,7 +269,7 @@ export class Peer {
                  * Prepare to respond to the incoming offer or answer.
                  */
 
-                if (msg.description) {
+                if ('description' in msg) {
                     // 1.
                     // check to make sure we're in a state in which we can
                     // accept an offer
@@ -255,11 +278,20 @@ export class Peer {
                         (this.makingOffer || pc.signalingState !== 'stable')
                     )
 
+                    // debug('___the msg stuff___')
+                    // debug('collision???', offerCollision)
+                    // debug('type', msg.description.type)
+                    // debug('this.makingOffer', this.makingOffer)
+                    // debug('pc signaling state', pc.signalingState)
+
+                    debug('collision????????????????????????????', offerCollision)
+
                     ignoreOffer = !this.polite && offerCollision
 
                     // If we're the impolite peer, and we're receiving a
                     // colliding offer, we return without setting the
                     // description, and set `ignoreOffer` to true.
+                    debug('ignoring the message???????????????', ignoreOffer)
                     if (ignoreOffer) {
                         return
                     }
@@ -278,6 +310,8 @@ export class Peer {
                     // our offer and accept the new one.
                     await pc.setRemoteDescription(msg.description)
 
+                    debug('done setting remote description', msg)
+
                     // If the newly-set remote description is an offer
                     if (msg.description.type === 'offer') {
                         // we ask WebRTC to select an appropriate local
@@ -288,8 +322,13 @@ export class Peer {
                         // received offer.
                         await pc.setLocalDescription()
                         const msg:SignalMessage = {  // this msg is an answer
+                            target: this._connections?.find(c => {
+                                return c !== this._party.id
+                            }),
                             description: pc.localDescription!
                         }
+
+                        debug('sending this message with our local description...', msg)
                         party.send(JSON.stringify(msg))
                     }
 
@@ -303,7 +342,7 @@ export class Peer {
                  */
                 } else if (msg.candidate) {
                     try {
-                        await pc.addIceCandidate(msg.candidate)
+                        await pc.addIceCandidate(msg)
                     } catch (err) {
                         if (!ignoreOffer) {
                             throw err
@@ -315,40 +354,5 @@ export class Peer {
                 console.error(err)
             }
         })
-
-        channel.onopen = (ev) => {
-            debug('got "open" event', ev)
-            this.handleSendChannelStatusChange(ev)
-            channel.send('Hello')
-        }
-
-        channel.onmessage = (ev) => {
-            debug('got a message in the channel', ev.data)
-        }
-
-        channel.onclose = ev => {
-            debug('channel closed', ev)
-            this.handleSendChannelStatusChange(ev)
-        }
-
-        debug('the channel', channel)
     }
-
-    // // called by the first peer to join
-    // listen () {
-    //     this._pc.ondatachannel = (ev:RTCDataChannelEvent) => {
-    //         const receiveChannel = ev.channel
-    //         receiveChannel.onmessage = ev => {
-    //             debug('got a message in listener', ev)
-    //         }
-
-    //         receiveChannel.onopen = ev => {
-    //             debug('channel opened...', ev)
-    //         }
-
-    //         receiveChannel.onclose = (ev) => {
-    //             debug('channel closed...', ev)
-    //         }
-    //     }
-    // }
 }

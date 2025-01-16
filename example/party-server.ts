@@ -37,9 +37,7 @@ export default class Server implements Party.Server {
 
     // a client disconnected
     onClose (party:Party.Connection) {
-        console.log('disconnect...', party.id)
         this.connections = this.connections.filter(c => c.id !== party.id)
-        console.log('connections...', this.connections.map(c => c.id))
         this.room.broadcast(JSON.stringify({
             connections: this.connections.map(c => c.id)
         }))
@@ -57,6 +55,7 @@ export default class Server implements Party.Server {
             return
         }
 
+        // handle offers and answers
         if (
             'description' in msg &&
             (msg.description.type === 'offer' ||
@@ -73,12 +72,13 @@ export default class Server implements Party.Server {
             target.send(message)
         }
 
-        // as well as broadcast it to all the other connections in the room...
-        // this.room.broadcast(
-        //     `${sender.id}: ${message}`,
-        //     // ...except for the connection it came from
-        //     [sender.id]
-        // )
+        // handle ICE candidates
+        if ('candidate' in msg) {
+            const target = this.connections.find(c => c.id === msg.target)
+            if (!target) return console.error('not target: ' + msg.target)
+
+            target.send(message)
+        }
     }
 }
 

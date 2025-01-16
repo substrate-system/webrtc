@@ -1,5 +1,28 @@
 # notes
 
+## next
+
+* [ ] setup a local cloudflare so we can have backend functions
+* [ ] fe calls the be to get a TURN credential
+
+The `.env` file has the right token ID and api token for cloudflare TURN server.
+
+
+
+## ICE
+
+* [ICE and SDP in WebRTC](https://www.digitalsamba.com/blog/ice-and-sdp-in-webrtc)
+
+### [ecosmob.com article](https://www.ecosmob.com/stun-turn-ice-servers-in-webrtc/)
+
+> When a device sends a request, a STUN server answers with the public IP
+> address and port.
+
+> TURN servers are used in instances when STUN fails.
+
+
+----------------------------------------------------------------
+
 * [signaling](https://developer.mozilla.org/en-US/docs/Web/API/WebRTC_API/Signaling_and_video_calling#the_signaling_server)
 
 ## [perfect negotiation](https://developer.mozilla.org/en-US/docs/Web/API/WebRTC_API/Perfect_negotiation)

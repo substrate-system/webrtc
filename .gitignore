@@ -6,5 +6,5 @@ dist
 .env
 public
 example/.partykit
-
 .partykit
+.dev.vars

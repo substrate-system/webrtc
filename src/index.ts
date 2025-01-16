@@ -8,7 +8,10 @@ const debug = Debug()
 export type SignalMessage = ({
     description:RTCSessionDescriptionInit
     target?:string
-})|(RTCIceCandidateInit & { target?:string });
+})|({
+    candidate:RTCIceCandidateInit;
+    target?:string
+});
 
 export type ConnectionState = {
     connections: string[]  // a list of connection IDs
@@ -92,7 +95,7 @@ export class Peer {
             const connections = msg.connections
             if (!connections) return  // only listen to connections messages
 
-            debug('got a connection message:::::', connections)
+            debug(':::::got a connection message:::::', connections)
             if ((connections.length > 1) && self.polite === null) {
                 // polite peer is 1st to connect
                 self.polite = false
@@ -124,7 +127,7 @@ export class Peer {
         }
     }
 
-    async connect ():Promise<void> {
+    connect ():void {
         debug('connect called')
         const channel = this.channel = this._pc.createDataChannel('abc')
 
@@ -216,7 +219,7 @@ export class Peer {
 
             const msg:SignalMessage = {
                 target: this._connections?.find(c => c !== this._party.id),
-                candidate: candidate.candidate
+                candidate
             }
 
             debug('sending this......ice candidate........', msg)
@@ -227,7 +230,10 @@ export class Peer {
          * @see https://developer.mozilla.org/en-US/docs/Web/API/WebRTC_API/Perfect_negotiation#using_restartice
          */
         pc.oniceconnectionstatechange = () => {
-            debug('ice connection state change', pc.iceConnectionState)
+            debug(
+                '________ice connection state change__________',
+                pc.iceConnectionState
+            )
 
             if (pc.iceConnectionState === 'failed') {
                 // `restartIce()` tells the ICE layer to automatically add the
@@ -328,7 +334,10 @@ export class Peer {
                             description: pc.localDescription!
                         }
 
-                        debug('sending this message with our local description...', msg)
+                        debug(
+                            'sending this message with our local description...',
+                            msg
+                        )
                         party.send(JSON.stringify(msg))
                     }
 
@@ -341,8 +350,10 @@ export class Peer {
                  * method `addIceCandidate()`.
                  */
                 } else if (msg.candidate) {
+                    debug('******************** ice candidate ****', msg)
+
                     try {
-                        await pc.addIceCandidate(msg)
+                        await pc.addIceCandidate(msg.candidate)
                     } catch (err) {
                         if (!ignoreOffer) {
                             throw err

@@ -2,7 +2,7 @@ import { type FunctionComponent, render } from 'preact'
 import { useCallback } from 'preact/hooks'
 import { html } from 'htm/preact'
 import { TextInput } from '@nichoth/components/htm/text-input'
-import { computed } from '@preact/signals'
+import { computed, useComputed } from '@preact/signals'
 import { State } from './state'
 import '@nichoth/components/text-input.css'
 import Debug from '@substrate-system/debug'
@@ -51,6 +51,19 @@ const Example:FunctionComponent = function () {
                 <span>${state.status.value}</span>
             </span>
         </div>
+
+        <h2>Peers</h2>
+
+        ${state.connections.value.length ?
+            html`
+                <ul class="peers">
+                    ${state.connections.value.map(peer => {
+                        return html`<li>${peer}</li>`
+                    })}
+                </ul>
+            ` :
+            html`<em>none</em>`
+        }
 
         <div class="controls">
             <button onClick=${connect} disabled=${isConnected}>

@@ -10,7 +10,7 @@ export type SignalMessage = ({
     target?:string
 })|(RTCIceCandidateInit & { target?:string });
 
-export type InitialMessage = {
+export type ConnectionState = {
     connections: string[]  // a list of connection IDs
 }
 
@@ -43,6 +43,7 @@ interface PeerEvents {
     connect:()=>void;
     open:()=>void;
     close:()=>void;
+    change:(ev:{ connections:string[] })=>void;
 }
 
 export class Peer {
@@ -50,48 +51,54 @@ export class Peer {
     private _pc:RTCPeerConnection
     private _emitter:ReturnType<typeof createNanoEvents<PeerEvents>>
     private _party:InstanceType<typeof PartySocket>
-    private _connections:string[]|null
-    makingOffer:boolean = false
+    _connections:string[]|null
+    makingOffer:boolean
     sendChannel?:RTCDataChannel  // RTCDataChannel for the local (sender)
     receiveChannel?:RTCDataChannel  // RTCDataChannel for the remote (receiver)
     channel?:RTCDataChannel
     config?:RTCConfiguration
-    polite:boolean  // polite peer is the first to connect to signaling server
+    polite:boolean|null  // polite peer is the first to connect to signaling server
 
     constructor (opts:PartialExcept<PeerOpts, 'party'>) {
         const rtc = getBrowserRTC()
         if (!rtc) throw new Error('RTC does not exist')
+        this.makingOffer = false
         this._wrtc = rtc
         this._connections = null
         this.config = opts.config
         this._pc = new this._wrtc.RTCPeerConnection(this.config)
         this._emitter = createNanoEvents<PeerEvents>()
-        this.polite = true
+        this.polite = null  // first peer to connect is polite
         this._party = opts.party
 
         const self = this
 
-        // we are supposed to get an initial message
-        // with a list of other clients that are connected
-        this._party.addEventListener('message', function initialMsg (ev) {
-            let msg:InitialMessage
+        /**
+         * Handle 'connections' type messages
+         * We use this to determine politeness
+         */
+        this._party.addEventListener('message', function handleConnections (ev) {
+            let msg:ConnectionState
             try {
                 msg = JSON.parse(ev.data)
             } catch (err) {
-                debug('not json!')
-                console.error(err)
+                debug('not json!', ev.data)
+                return console.error(err)
             }
-
-            if (!msg!) return
 
             const connections = msg.connections
-            if (!connections) return
-            if (connections.length) {
+            if (!connections) return  // only listen to connections type
+
+            debug('got a connection message:::::', connections)
+            if ((connections.length > 1) && self.polite === null) {
                 // polite peer is 1st to connect
                 self.polite = false
+            } else {
+                self.polite = true
             }
+
             self._connections = connections
-            self._party.removeEventListener('message', initialMsg)
+            self._emitter.emit('change', { connections })
         })
     }
 
@@ -117,7 +124,7 @@ export class Peer {
      * When you first connect to the websocket, it will give you a list
      * of all the other peers in the room.
      *
-     * If the list is empty, you are the first one to connect.
+     * If the list is empty except for you, then you are the first to connect.
      */
 
     async connect ():Promise<void> {
@@ -134,7 +141,9 @@ export class Peer {
         }
 
         const conns = this._connections
-        const otherConnectionId = conns.length ? conns[0] : undefined
+        const otherConnectionId = conns.find(c => c !== this._party.id)
+
+        debug('the other id...', otherConnectionId)
 
         const pc = this._pc
         pc.onnegotiationneeded = async () => {
@@ -173,6 +182,8 @@ export class Peer {
          * @see https://developer.mozilla.org/en-US/docs/Web/API/WebRTC_API/Perfect_negotiation#using_restartice
          */
         pc.oniceconnectionstatechange = () => {
+            debug('ice connection state change', pc.iceConnectionState)
+
             if (pc.iceConnectionState === 'failed') {
                 // `restartIce()` tells the ICE layer to automatically add the
                 // `iceRestart` flag to the next ICE message sent.
@@ -186,18 +197,22 @@ export class Peer {
          * How the local ICE layer passes candidates to us for delivery to the
          * remote peer over the signaling channel.
          */
+        let n = 0
         pc.onicecandidate = (ev:RTCPeerConnectionIceEvent) => {
+            n++
             const { candidate } = ev
-            debug('got ice candidate', candidate)
+            debug('got ice candidate', candidate, n)
 
             if (!candidate) {
-                return debug('not candidate', ev)
+                return debug('not candidate!!!!!', ev)
             }
 
             const msg:SignalMessage = {
                 target: otherConnectionId,
                 candidate: candidate.candidate
             }
+
+            debug('sending this message', msg)
 
             party.send(JSON.stringify(msg))
         }
@@ -215,6 +230,8 @@ export class Peer {
          */
         let ignoreOffer:boolean = false
         party.addEventListener('message', async ev => {
+            debug('______got a message method______', ev.data)
+
             try {
                 const msg:SignalMessage = JSON.parse(ev.data)
                 if (!('description' in msg) || !('candidate' in msg)) return
@@ -306,7 +323,7 @@ export class Peer {
         }
 
         channel.onmessage = (ev) => {
-            debug('got a message', ev.data)
+            debug('got a message in the channel', ev.data)
         }
 
         channel.onclose = ev => {
@@ -317,21 +334,21 @@ export class Peer {
         debug('the channel', channel)
     }
 
-    // called by the first peer to join
-    listen () {
-        this._pc.ondatachannel = (ev:RTCDataChannelEvent) => {
-            const receiveChannel = ev.channel
-            receiveChannel.onmessage = ev => {
-                debug('got a message in listener', ev)
-            }
+    // // called by the first peer to join
+    // listen () {
+    //     this._pc.ondatachannel = (ev:RTCDataChannelEvent) => {
+    //         const receiveChannel = ev.channel
+    //         receiveChannel.onmessage = ev => {
+    //             debug('got a message in listener', ev)
+    //         }
 
-            receiveChannel.onopen = ev => {
-                debug('channel opened...', ev)
-            }
+    //         receiveChannel.onopen = ev => {
+    //             debug('channel opened...', ev)
+    //         }
 
-            receiveChannel.onclose = (ev) => {
-                debug('channel closed...', ev)
-            }
-        }
-    }
+    //         receiveChannel.onclose = (ev) => {
+    //             debug('channel closed...', ev)
+    //         }
+    //     }
+    // }
 }

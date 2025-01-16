@@ -17,7 +17,7 @@ const PEER_CONFIG = {
 
 export const State = function ():{
     status:Signal<'disconnected'|'connected'>;
-    first:Signal<boolean|null>;
+    connections:Signal<string[]>  // <-- a list of websockets
     party:InstanceType<typeof PartySocket>
     me:Peer;
 } {  // eslint-disable-line indent
@@ -30,45 +30,38 @@ export const State = function ():{
 
     const state = {
         me,
+        connections: signal<string[]>([]),
         party,
-        first: signal<boolean|null>(null),
         status: signal<'disconnected'|'connected'>('disconnected')
     }
+
+    me.on('change', ({ connections }) => {
+        debug('change', connections)
+        state.connections.value = connections
+    })
 
     // @ts-expect-error dev
     window.party = party
 
-    party.addEventListener('message', function handleConnections (ev) {
-        try {
-            const msg = JSON.parse(ev.data)
-            if (msg.connections.length) {
-                // we are second
-                state.first.value = false
-            } else {
-                state.first.value = true
-            }
+    // party.addEventListener('message', function handleConnections (ev) {
+    //     try {
+    //         const msg = JSON.parse(ev.data)
+    //         if (msg.connections.length) {
+    //             // we are second
+    //             state.first.value = false
+    //         } else {
+    //             state.first.value = true
+    //         }
 
-            // we get the list of peers as the first message
-            party.removeEventListener('message', handleConnections)
-        } catch (err) {
-            console.error('not json...', err)
-        }
-    })
+    //         // we get the list of peers as the first message
+    //         // party.removeEventListener('message', handleConnections)
+    //     } catch (err) {
+    //         console.error('not json...', err)
+    //     }
+    // })
 
-    party.addEventListener('message', (ev) => {
-        debug(`Received -> ${ev.data}`)
-    })
-
-    // Let's listen for when the connection opens
-    // And send a ping every 2 seconds right after
-    // party.addEventListener('open', () => {
-    //     debug('Connected!')
-    //     debug('Sending a ping every 3 seconds...')
-
-    //     clearInterval(pingInterval)
-    //     pingInterval = setInterval(() => {
-    //         party.send('ping')
-    //     }, 3000)
+    // party.addEventListener('message', (ev) => {
+    //     debug(`Received -> ${ev.data}`)
     // })
 
     return state

@@ -27,21 +27,22 @@ export default class Server implements Party.Server {
             url: ${new URL(ctx.request.url).pathname}`
         )
 
-        // send the list of other connections to the client
-        conn.send(JSON.stringify({
-            connections: this.connections.map(c => c.id)
-        }))
-
         this.connections.push(conn)
 
-        // let's send a message to the connection
-        // conn.send('hello from server')
-        this.room.broadcast('connected', [conn.id])
+        // send the list of connections to the clients
+        this.room.broadcast(JSON.stringify({
+            connections: this.connections.map(c => c.id)
+        }))
     }
 
+    // a client disconnected
     onClose (party:Party.Connection) {
-        this.room.broadcast('disconnected: ' + party.id)
+        console.log('disconnect...', party.id)
         this.connections = this.connections.filter(c => c.id !== party.id)
+        console.log('connections...', this.connections.map(c => c.id))
+        this.room.broadcast(JSON.stringify({
+            connections: this.connections.map(c => c.id)
+        }))
     }
 
     onMessage (message:string, sender:Party.Connection) {

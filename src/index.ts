@@ -133,7 +133,6 @@ export class Peer {
             throw new Error('null connections')
         }
 
-        // if (!this._connections.length) return this.listen()
         const conns = this._connections
         const otherConnectionId = conns.length ? conns[0] : undefined
 
@@ -271,7 +270,7 @@ export class Peer {
                         // generate an appropriate answer in response to the
                         // received offer.
                         await pc.setLocalDescription()
-                        const msg:SignalMessage = {
+                        const msg:SignalMessage = {  // this msg is an answer
                             description: pc.localDescription!
                         }
                         party.send(JSON.stringify(msg))

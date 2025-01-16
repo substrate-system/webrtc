@@ -36,12 +36,6 @@ const Example:FunctionComponent = function () {
         me.connect()
     }, [])
 
-    const listen = useCallback((ev:MouseEvent) => {
-        ev.preventDefault()
-        debug('listening...')
-        me.listen()
-    }, [])
-
     const sendMsg = useCallback((ev:SubmitEvent) => {
         ev.preventDefault()
         const form = ev.target as HTMLFormElement
@@ -62,7 +56,6 @@ const Example:FunctionComponent = function () {
             <button onClick=${connect} disabled=${isConnected}>
                 connect
             </button>
-            <button onClick=${listen}>listen</button>
         </div>
 
         <hr />

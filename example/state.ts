@@ -17,7 +17,6 @@ const PEER_CONFIG = {
 
 export const State = function ():{
     status:Signal<'disconnected'|'connected'>;
-    peerIds:Signal<string[]>;  // <-- this is other WS connections
     first:Signal<boolean|null>;
     party:InstanceType<typeof PartySocket>
     me:Peer;
@@ -33,7 +32,6 @@ export const State = function ():{
         me,
         party,
         first: signal<boolean|null>(null),
-        peerIds: signal([]),
         status: signal<'disconnected'|'connected'>('disconnected')
     }
 

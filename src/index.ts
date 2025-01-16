@@ -5,14 +5,16 @@ import type PartySocket from 'partysocket'
 export { type BrowserRtc } from './get-browser-rtc.js'
 const debug = Debug()
 
-export type SignalMessage = {
-    type:'offer'|'answer',
-    target?:string,
-}|{
-    type:'icecandidate';
-    candidate:RTCIceCandidate|null;
-    target?:string;
-}
+export type SignalMessage = ({
+    description:RTCSessionDescriptionInit
+    target?:string
+})|(RTCIceCandidateInit & { target:string });
+
+// |{
+//     type:'icecandidate';
+//     candidate:RTCIceCandidate|null;
+//     target?:string;
+// }|RTCIceCandidateInit
 
 type PeerOpts = {
     config:RTCConfiguration;
@@ -39,7 +41,7 @@ type PeerOpts = {
 //     rtcpMuxPolicy: 'require'
 // };
 
-interface Events {
+interface PeerEvents {
     connect:()=>void;
     open:()=>void;
     close:()=>void;
@@ -48,25 +50,54 @@ interface Events {
 export class Peer {
     private _wrtc:BrowserRtc
     private _pc:RTCPeerConnection
-    private _emitter:ReturnType<typeof createNanoEvents<Events>>
+    private _emitter:ReturnType<typeof createNanoEvents<PeerEvents>>
     private _party:InstanceType<typeof PartySocket>
+    private _connections:string[]|null
     makingOffer:boolean = false
     sendChannel?:RTCDataChannel  // RTCDataChannel for the local (sender)
     receiveChannel?:RTCDataChannel  // RTCDataChannel for the remote (receiver)
     channel?:RTCDataChannel
     config?:RTCConfiguration
+    polite:boolean  // polite peer is the first to connect to signaling server
 
     constructor (opts:PartialExcept<PeerOpts, 'party'>) {
         const rtc = getBrowserRTC()
         if (!rtc) throw new Error('RTC does not exist')
         this._wrtc = rtc
+        this._connections = null
         this.config = opts.config
         this._pc = new this._wrtc.RTCPeerConnection(this.config)
-        this._emitter = createNanoEvents<Events>()
+        this._emitter = createNanoEvents<PeerEvents>()
+        this.polite = true
         this._party = opts.party
+
+        const self = this
+
+        // we are supposed to get an initial message
+        // with a list of other clients that are connected
+        this._party.addEventListener('message', function initialMsg (ev) {
+            let msg:Record<string, any>
+            try {
+                msg = JSON.parse(ev.data)
+            } catch (err) {
+                debug('not json!')
+                console.error(err)
+            }
+
+            if (!msg!) return
+
+            const connections = msg.connections
+            if (!connections) return
+            if (connections.length) {
+                // polite peer is 1st to connect
+                self.polite = false
+            }
+            self._connections = connections
+            self._party.removeEventListener('message', initialMsg)
+        })
     }
 
-    on<E extends keyof Events> (ev:E, cb:Events[E]) {
+    on<E extends keyof PeerEvents> (ev:E, cb:PeerEvents[E]) {
         return this._emitter.on(ev, cb)
     }
 
@@ -86,23 +117,24 @@ export class Peer {
 
     /**
      * When you first connect to the websocket, it will send you a list
-     * of all the other peers in the room. If you are the second to connect,
-     * then you call `connect`, b/c you know the other user's ID. If you are
-     * first, then you should call `listen`.
+     * of all the other peers in the room.
      */
 
-    /**
-     * this is called by the one initiating the connection
-     * (the second one to connect)
-     */
-    async connect (
-        otherConnectionId?:string
-    ):Promise<void> {
+    async connect ():Promise<void> {
         const party = this._party
         const channel = this.channel = this._pc.createDataChannel('abc')
 
-        // candidate message
-        // data: { description, candidate }
+        if (this._connections === null) {
+            // should not happen
+            //
+            // This is called in response to a button click;
+            // we should get the initial websocket message when the page loads,
+            // so this._connections will be an array, either empty or not.
+            throw new Error('null connections')
+        }
+
+        if (!this._connections.length) return this.listen()
+        const otherConnectionId = this._connections[0]
 
         const pc = this._pc
         pc.onnegotiationneeded = async () => {
@@ -114,11 +146,12 @@ export class Peer {
                 // automatically creates and sets the appropriate description
                 // based on the current signalingState.
                 await pc.setLocalDescription()
-                party.send(JSON.stringify({
-                    type: 'offer',
+
+                const msg:SignalMessage = {
                     target: otherConnectionId,
-                    description: pc.localDescription
-                }))
+                    description: pc.localDescription!
+                }
+                party.send(JSON.stringify(msg))
             } catch (err) {
                 console.error(err)
             } finally {
@@ -126,26 +159,107 @@ export class Peer {
             }
         }
 
-        pc.onicecandidate = (ev) => {
+        pc.onicecandidate = (ev:RTCPeerConnectionIceEvent) => {
             const { candidate } = ev
             debug('got ice candidate', candidate)
 
+            if (!candidate) {
+                return debug('not candidate', ev)
+            }
+
             const msg:SignalMessage = {
-                type: 'icecandidate',
                 target: otherConnectionId,
-                candidate
+                candidate: candidate.candidate
             }
 
             party.send(JSON.stringify(msg))
         }
 
+        /**
+         * @see {@link https://developer.mozilla.org/en-US/docs/Web/API/WebRTC_API/Perfect_negotiation#handling_incoming_messages_on_the_signaling_channel MDN docs}
+         *
+         * > If the incoming message has a description, it's either an offer or
+         * > an answer sent by the other peer.
+         *
+         * > If, on the other hand, the message has a candidate, it's an ICE
+         * > candidate received from the remote peer as part of trickle ICE.
+         * > The candidate is destined to be delivered to the local ICE layer
+         * > by passing it into addIceCandidate().
+         */
+        let ignoreOffer:boolean = false
         party.addEventListener('message', async ev => {
             try {
-                const msg:{ description, candidate } = JSON.parse(ev.data)
-                if (!msg.description || !msg.candidate) return
-                await pc.setRemoteDescription(msg.description)
+                const msg:SignalMessage = JSON.parse(ev.data)
+                if (!('description' in msg) || !('candidate' in msg)) return
+
+                /**
+                 * @see https://developer.mozilla.org/en-US/docs/Web/API/WebRTC_API/Perfect_negotiation#on_receiving_a_description
+                 * "on reveiving a description"
+                 */
+
+                /**
+                 * _On receiving a description_
+                 * Prepare to respond to the incoming offer or answer.
+                 */
+
+                if (msg.description) {
+                    // 1.
+                    // check to make sure we're in a state in which we can
+                    // accept an offer
+                    const offerCollision = (
+                        msg.description.type === 'offer' &&
+                        (this.makingOffer || pc.signalingState !== 'stable')
+                    )
+
+                    ignoreOffer = (!this.polite && offerCollision)
+
+                    // If we're the impolite peer, and we're receiving a
+                    // colliding offer, we return without setting the
+                    // description, and set `ignoreOffer` to true.
+                    if (ignoreOffer) {
+                        return
+                    }
+
+                    // If we're the polite peer, and we're receiving a
+                    // colliding offer, we don't need to do anything special,
+                    // because our existing offer will automatically be rolled
+                    // back in the next step.
+
+                    // Having ensured that we want to accept the offer, we set
+                    // the remote description to the incoming offer by calling
+                    // `setRemoteDescription()`.
+                    //
+                    // This lets WebRTC know what the proposed configuration of
+                    // the other peer is. If we're the polite peer, we will drop
+                    // our offer and accept the new one.
+                    await pc.setRemoteDescription(msg.description)
+
+                    // If the newly-set remote description is an offer
+                    if (msg.description.type === 'offer') {
+                        // we ask WebRTC to select an appropriate local
+                        // configuration by calling the  method
+                        // `setLocalDescription()` without parameters.
+                        await pc.setLocalDescription()
+                        const msg:SignalMessage = {
+                            description: pc.localDescription!
+                        }
+                        party.send(JSON.stringify(msg))
+                    }
+                /**
+                 * @see https://developer.mozilla.org/en-US/docs/Web/API/WebRTC_API/Perfect_negotiation#on_receiving_an_ice_candidate
+                 * _On receiving an ICE candidate_
+                 */
+                } else if (msg.candidate) {
+                    try {
+                        await pc.addIceCandidate(msg.candidate)
+                    } catch (err) {
+                        if (!ignoreOffer) {
+                            throw err
+                        }
+                    }
+                }
             } catch (err) {
-                console.log('not json')
+                debug(':sad-trombone:')
                 console.error(err)
             }
         })

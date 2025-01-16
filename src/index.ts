@@ -8,13 +8,11 @@ const debug = Debug()
 export type SignalMessage = ({
     description:RTCSessionDescriptionInit
     target?:string
-})|(RTCIceCandidateInit & { target:string });
+})|(RTCIceCandidateInit & { target?:string });
 
-// |{
-//     type:'icecandidate';
-//     candidate:RTCIceCandidate|null;
-//     target?:string;
-// }|RTCIceCandidateInit
+export type InitialMessage = {
+    connections: string[]  // a list of connection IDs
+}
 
 type PeerOpts = {
     config:RTCConfiguration;
@@ -76,7 +74,7 @@ export class Peer {
         // we are supposed to get an initial message
         // with a list of other clients that are connected
         this._party.addEventListener('message', function initialMsg (ev) {
-            let msg:Record<string, any>
+            let msg:InitialMessage
             try {
                 msg = JSON.parse(ev.data)
             } catch (err) {
@@ -116,8 +114,10 @@ export class Peer {
     }
 
     /**
-     * When you first connect to the websocket, it will send you a list
+     * When you first connect to the websocket, it will give you a list
      * of all the other peers in the room.
+     *
+     * If the list is empty, you are the first one to connect.
      */
 
     async connect ():Promise<void> {
@@ -133,18 +133,28 @@ export class Peer {
             throw new Error('null connections')
         }
 
-        if (!this._connections.length) return this.listen()
-        const otherConnectionId = this._connections[0]
+        // if (!this._connections.length) return this.listen()
+        const conns = this._connections
+        const otherConnectionId = conns.length ? conns[0] : undefined
 
         const pc = this._pc
         pc.onnegotiationneeded = async () => {
             try {
+                // avoid race coditions by using this instead of signaling state
                 this.makingOffer = true
+
                 // @see https://developer.mozilla.org/en-US/docs/Web/API/WebRTC_API/Perfect_negotiation#the_perfect_negotiation_logic
                 //
                 // Note that setLocalDescription() without arguments
                 // automatically creates and sets the appropriate description
                 // based on the current signalingState.
+                //
+                // The description is either an answer to the most recent
+                // offer from the remote peer, or a freshly-created offer if
+                // there's no negotiation underway.
+                //
+                // the `negotiationneeded` event is only fired in `stable` state,
+                // so here it will always be an offer
                 await pc.setLocalDescription()
 
                 const msg:SignalMessage = {
@@ -153,12 +163,30 @@ export class Peer {
                 }
                 party.send(JSON.stringify(msg))
             } catch (err) {
+                debug('error in onnegotiationneeded')
                 console.error(err)
             } finally {
                 this.makingOffer = false
             }
         }
 
+        /**
+         * @see https://developer.mozilla.org/en-US/docs/Web/API/WebRTC_API/Perfect_negotiation#using_restartice
+         */
+        pc.oniceconnectionstatechange = () => {
+            if (pc.iceConnectionState === 'failed') {
+                // `restartIce()` tells the ICE layer to automatically add the
+                // `iceRestart` flag to the next ICE message sent.
+                pc.restartIce()
+            }
+        }
+
+        /**
+         * @see https://developer.mozilla.org/en-US/docs/Web/API/WebRTC_API/Perfect_negotiation#handling_incoming_ice_candidates
+         *
+         * How the local ICE layer passes candidates to us for delivery to the
+         * remote peer over the signaling channel.
+         */
         pc.onicecandidate = (ev:RTCPeerConnectionIceEvent) => {
             const { candidate } = ev
             debug('got ice candidate', candidate)
@@ -178,8 +206,8 @@ export class Peer {
         /**
          * @see {@link https://developer.mozilla.org/en-US/docs/Web/API/WebRTC_API/Perfect_negotiation#handling_incoming_messages_on_the_signaling_channel MDN docs}
          *
-         * > If the incoming message has a description, it's either an offer or
-         * > an answer sent by the other peer.
+         * > If the incoming message has a `description`, it's either an offer
+         * > or an answer sent by the other peer.
          *
          * > If, on the other hand, the message has a candidate, it's an ICE
          * > candidate received from the remote peer as part of trickle ICE.
@@ -211,7 +239,7 @@ export class Peer {
                         (this.makingOffer || pc.signalingState !== 'stable')
                     )
 
-                    ignoreOffer = (!this.polite && offerCollision)
+                    ignoreOffer = !this.polite && offerCollision
 
                     // If we're the impolite peer, and we're receiving a
                     // colliding offer, we return without setting the
@@ -239,15 +267,23 @@ export class Peer {
                         // we ask WebRTC to select an appropriate local
                         // configuration by calling the  method
                         // `setLocalDescription()` without parameters.
+                        // This causes setLocalDescription() to automatically
+                        // generate an appropriate answer in response to the
+                        // received offer.
                         await pc.setLocalDescription()
                         const msg:SignalMessage = {
                             description: pc.localDescription!
                         }
                         party.send(JSON.stringify(msg))
                     }
+
                 /**
                  * @see https://developer.mozilla.org/en-US/docs/Web/API/WebRTC_API/Perfect_negotiation#on_receiving_an_ice_candidate
                  * _On receiving an ICE candidate_
+                 *
+                 * If the received message contains an ICE candidate, we deliver
+                 * it to the local ICE layer by calling the
+                 * method `addIceCandidate()`.
                  */
                 } else if (msg.candidate) {
                     try {

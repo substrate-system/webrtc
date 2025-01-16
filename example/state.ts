@@ -26,7 +26,7 @@ export const State = function ():{
         party,
         config: PEER_CONFIG
     })
-    let pingInterval:ReturnType<typeof setInterval>
+    // let pingInterval:ReturnType<typeof setInterval>
 
     const state = {
         me,
@@ -61,15 +61,15 @@ export const State = function ():{
 
     // Let's listen for when the connection opens
     // And send a ping every 2 seconds right after
-    party.addEventListener('open', () => {
-        debug('Connected!')
-        debug('Sending a ping every 3 seconds...')
+    // party.addEventListener('open', () => {
+    //     debug('Connected!')
+    //     debug('Sending a ping every 3 seconds...')
 
-        clearInterval(pingInterval)
-        pingInterval = setInterval(() => {
-            party.send('ping')
-        }, 3000)
-    })
+    //     clearInterval(pingInterval)
+    //     pingInterval = setInterval(() => {
+    //         party.send('ping')
+    //     }, 3000)
+    // })
 
     return state
 }

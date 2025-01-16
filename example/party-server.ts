@@ -56,7 +56,11 @@ export default class Server implements Party.Server {
             return
         }
 
-        if (msg.type === 'offer' || msg.type === 'answer') {
+        if (
+            'description' in msg &&
+            (msg.description.type === 'offer' ||
+            msg.description.type === 'answer')
+        ) {
             // send the message to its target
             const target = this.connections.find(conn => {
                 return conn.id === msg.target

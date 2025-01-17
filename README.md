@@ -2,6 +2,10 @@
 
 Webrtc for humans.
 
+The example code depends on cloudflare as a STUN/TURN server. To run the demo,
+you will need to create a cloudflare account and [generate credentials](https://developers.cloudflare.com/calls/turn/generate-credentials/).
+
+
 <details><summary><h2>Contents</h2></summary>
 <!-- toc -->
 </details>

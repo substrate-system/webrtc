@@ -7,7 +7,44 @@
 
 The `.env` file has the right token ID and api token for cloudflare TURN server.
 
+----------------
 
+## credentials for CF + webrtc
+
+[See the docs](https://developers.cloudflare.com/calls/turn/generate-credentials/)
+
+The credentials from cloudflare is working. It return an object. See the
+test file:
+
+```js
+const res = await ky.post(
+    `https://rtc.live.cloudflare.com/v1/turn/keys/${CF_TURN_TOKEN_ID}/credentials/generate`,
+    {
+        headers: {
+            Authorization: `Bearer ${CF_TURN_API_TOKEN}`,
+            'Content-Type': 'application/json'
+        },
+        json: { ttl: 86400 }
+    }
+)
+```
+
+It returns an object like this:
+
+```js
+{
+  "iceServers": {
+    "urls": [
+      "stun:stun.cloudflare.com:3478",
+      "turn:turn.cloudflare.com:3478?transport=udp",
+      "turn:turn.cloudflare.com:3478?transport=tcp",
+      "turns:turn.cloudflare.com:5349?transport=tcp"
+    ],
+    "username": "bc91b63e2b5d759f8eb9f3b58062439e0a0e15893d76317d833265ad08d6631099ce7c7087caabb31ad3e1c386424e3e",
+    "credential": "ebd71f1d3edbc2b0edae3cd5a6d82284aeb5c3b8fdaa9b8e3bf9cec683e0d45fe9f5b44e5145db3300f06c250a15b4a0"
+  }
+}
+```
 
 ## ICE
 

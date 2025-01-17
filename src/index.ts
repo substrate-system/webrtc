@@ -51,7 +51,7 @@ interface PeerEvents {
 
 export class Peer {
     private _wrtc:BrowserRtc
-    private _pc:RTCPeerConnection
+    private _pc?:RTCPeerConnection
     private _emitter:ReturnType<typeof createNanoEvents<PeerEvents>>
     private _party:InstanceType<typeof PartySocket>
     private _listening:boolean
@@ -71,7 +71,7 @@ export class Peer {
 
         this._connections = null
         this.config = opts.config
-        this._pc = new this._wrtc.RTCPeerConnection(this.config)
+        // this._pc = new this._wrtc.RTCPeerConnection(this.config)
         this._emitter = createNanoEvents<PeerEvents>()
         this.polite = null  // first peer to connect is polite
         this._party = opts.party
@@ -82,6 +82,7 @@ export class Peer {
         /**
          * Handle 'connections' type messages
          * We use this to determine politeness
+         * 1st user is "polite", 2nd "impolite"
          */
         this._party.addEventListener('message', (ev) => {
             let msg:ConnectionState
@@ -91,11 +92,12 @@ export class Peer {
                 debug('not json!', ev.data)
                 return console.error(err)
             }
+            debug('got a message in src file', msg)
 
             const connections = msg.connections
-            if (!connections) return  // only listen to connections messages
-
             debug(':::::got a connection message:::::', connections)
+            if (!connections) return  // only listen for connections messages
+
             if ((connections.length > 1) && self.polite === null) {
                 // polite peer is 1st to connect
                 self.polite = false
@@ -104,7 +106,6 @@ export class Peer {
             }
 
             self._connections = connections
-            if (!this._listening) this._listen()
             self._emitter.emit('change', { connections })
         })
     }
@@ -113,27 +114,28 @@ export class Peer {
         return this._emitter.on(ev, cb)
     }
 
-    handleSendChannelStatusChange (ev) {
+    handleSendChannelStatusChange () {
         if (!this.channel) return  // for TS
         const channel = this.channel
         const state = channel.readyState
 
         if (state === 'open') {
-            debug('its open!', ev)
+            debug('its open!', state)
             this._emitter.emit('open')
         } else {
-            debug('closed!', ev)
+            debug('closed!', state)
             this._emitter.emit('close')
         }
     }
 
-    connect ():void {
+    connect (config?:RTCConfiguration):void {
         debug('connect called')
+        if (config) this.config = config
+        this._pc = new this._wrtc.RTCPeerConnection(this.config)
         const channel = this.channel = this._pc.createDataChannel('abc')
 
-        channel.onopen = (ev) => {
-            debug('got "open" event', ev)
-            this.handleSendChannelStatusChange(ev)
+        channel.onopen = () => {
+            this.handleSendChannelStatusChange()
             channel.send('Hello')
         }
 
@@ -141,10 +143,11 @@ export class Peer {
             debug('got a message in the channel', ev.data)
         }
 
-        channel.onclose = ev => {
-            debug('channel closed', ev)
-            this.handleSendChannelStatusChange(ev)
+        channel.onclose = () => {
+            this.handleSendChannelStatusChange()
         }
+
+        if (!this._listening) this._listen()
     }
 
     /**
@@ -153,21 +156,21 @@ export class Peer {
      */
     private _listen () {
         this._listening = true
-        const pc = this._pc
+        const pc = this._pc!
         const party = this._party
 
         pc.ondatachannel = (ev:RTCDataChannelEvent) => {
             debug('______ on data channel ______')
-            const receiveChannel = ev.channel
-            receiveChannel.onmessage = ev => {
-                debug('got a message on receiveChannel', ev)
+            const channel = ev.channel
+            channel.onmessage = ev => {
+                debug('got a message on receive channel', ev.data)
             }
 
-            receiveChannel.onopen = ev => {
+            channel.onopen = ev => {
                 debug('channel opened...', ev)
             }
 
-            receiveChannel.onclose = (ev) => {
+            channel.onclose = (ev) => {
                 debug('channel closed...', ev)
             }
         }
@@ -263,7 +266,7 @@ export class Peer {
 
                 if (!(('description' in msg) || ('candidate' in msg))) return
 
-                debug('stilll going................', msg)
+                debug('still going................', msg)
 
                 /**
                  * @see https://developer.mozilla.org/en-US/docs/Web/API/WebRTC_API/Perfect_negotiation#on_receiving_a_description
@@ -350,8 +353,6 @@ export class Peer {
                  * method `addIceCandidate()`.
                  */
                 } else if (msg.candidate) {
-                    debug('******************** ice candidate ****', msg)
-
                     try {
                         await pc.addIceCandidate(msg.candidate)
                     } catch (err) {

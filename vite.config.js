@@ -33,8 +33,15 @@ export default defineConfig({
         port: 8888,
         host: true,
         open: true,
+        proxy: {
+            '/api': {
+                target: 'http://localhost:9999',
+                changeOrigin: true,
+            },
+        },
     },
     build: {
+        target: 'esnext',
         minify: false,
         outDir: '../public',
         emptyOutDir: true,

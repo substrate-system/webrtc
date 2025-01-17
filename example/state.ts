@@ -25,11 +25,6 @@ export const State = function ():{
 } {  // eslint-disable-line indent
     const party = Party()
 
-    // party.addEventListener('message', msg => {
-    //     debug('got a message')
-    //     console.log(JSON.parse(msg.data))
-    // })
-
     // need to await a ky call to get config
     const me = new Peer({
         party,

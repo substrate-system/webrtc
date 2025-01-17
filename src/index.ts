@@ -82,6 +82,7 @@ export class Peer {
         /**
          * Handle 'connections' type messages
          * We use this to determine politeness
+         * 1st user is "polite", 2nd "impolite"
          */
         this._party.addEventListener('message', (ev) => {
             let msg:ConnectionState

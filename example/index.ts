@@ -9,6 +9,7 @@ import Debug from '@substrate-system/debug'
 const debug = Debug()
 
 const state = await State()
+State.getIceData(state)
 
 const isConnected = computed(() => {
     return state.status.value === 'connected'
@@ -31,9 +32,9 @@ me.on('close', () => {
 
 const Example:FunctionComponent = function () {
     const connect = useCallback((ev:MouseEvent) => {
+        if (!state.config.value) throw new Error('not config!')
         ev.preventDefault()
-        debug('connecting...')
-        me.connect()
+        me.connect(state.config.value)
     }, [])
 
     const sendMsg = useCallback((ev:SubmitEvent) => {
@@ -93,9 +94,3 @@ const Example:FunctionComponent = function () {
 }
 
 render(html`<${Example} />`, document.getElementById('root')!)
-
-// const localConnection = null  // RTCPeerConnection for our "local" connection
-// const remoteConnection = null  // RTCPeerConnection for the "remote"
-
-// const sendChannel = null  // RTCDataChannel for the local (sender)
-// const receiveChannel = null  // RTCDataChannel for the remote (receiver)

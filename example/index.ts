@@ -8,7 +8,7 @@ import '@nichoth/components/text-input.css'
 import Debug from '@substrate-system/debug'
 const debug = Debug()
 
-const state = State()
+const state = await State()
 
 const isConnected = computed(() => {
     return state.status.value === 'connected'
@@ -92,13 +92,10 @@ const Example:FunctionComponent = function () {
     </div>`
 }
 
+render(html`<${Example} />`, document.getElementById('root')!)
+
 // const localConnection = null  // RTCPeerConnection for our "local" connection
 // const remoteConnection = null  // RTCPeerConnection for the "remote"
 
 // const sendChannel = null  // RTCDataChannel for the local (sender)
 // const receiveChannel = null  // RTCDataChannel for the remote (receiver)
-
-window.addEventListener('load', () => {
-    render(html`<${Example} />`, document.getElementById('root')!)
-}, false)
-

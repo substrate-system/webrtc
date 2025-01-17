@@ -10,19 +10,19 @@ export const DAY = 86400  // 24 hours in seconds
 // https://ephemeral.cx/2014/09/a-dead-simple-webrtc-example/
 // An ICE candidate is essentially a description of how to connect to a client.
 
-const PEER_CONFIG = {
-    iceServers: [
-        { urls: 'stun:stun.l.google.com:19302' },
-        { urls: 'stun:stun.services.mozilla.com' },
-        // see https://developers.cloudflare.com/calls/turn/
-        { urls: 'stun:stun.cloudflare.com:3478' },  // STUN over UDP
-        {
-            urls: 'turn:turn.cloudflare.com:3478',
-        },  // TURN over UDP
-        // { urls: 'turn:turn.cloudflare.com:80' },  // TURN over TCP
-        // { urls: 'turn:turn.cloudflare.com:5349' }  // TURN over TLS
-    ]
-}
+// const PEER_CONFIG = {
+//     iceServers: [
+//         { urls: 'stun:stun.l.google.com:19302' },
+//         { urls: 'stun:stun.services.mozilla.com' },
+//         // see https://developers.cloudflare.com/calls/turn/
+//         { urls: 'stun:stun.cloudflare.com:3478' },  // STUN over UDP
+//         {
+//             urls: 'turn:turn.cloudflare.com:3478',
+//         },  // TURN over UDP
+//         // { urls: 'turn:turn.cloudflare.com:80' },  // TURN over TCP
+//         // { urls: 'turn:turn.cloudflare.com:5349' }  // TURN over TLS
+//     ]
+// }
 
 export const State = function ():{
     status:Signal<'disconnected'|'connected'>;

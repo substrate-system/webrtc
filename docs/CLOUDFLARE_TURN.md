@@ -2,6 +2,8 @@
 
 ## credentials
 
+It works. See the test file.
+
 See https://developers.cloudflare.com/calls/turn/generate-credentials/
 
 Make an API call to the auth service.

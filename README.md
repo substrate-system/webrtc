@@ -7,7 +7,20 @@ you will need to create a cloudflare account and [generate credentials](https://
 
 
 <details><summary><h2>Contents</h2></summary>
+
 <!-- toc -->
+
+- [install](#install)
+- [Modules](#modules)
+  * [ESM](#esm)
+  * [Common JS](#common-js)
+  * [pre-built JS](#pre-built-js)
+- [use](#use)
+  * [JS](#js)
+- [develop](#develop)
+
+<!-- tocstop -->
+
 </details>
 
 ## install

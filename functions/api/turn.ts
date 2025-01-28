@@ -1,7 +1,7 @@
 import ky from 'ky'
 import type { Env } from '../../_functions/types'
 
-// response example
+// __response example__
 // {
 //  iceServers: {
 //    urls: [

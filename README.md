@@ -2,8 +2,9 @@
 
 Webrtc for humans.
 
-The example code depends on cloudflare as a STUN/TURN server. To run the demo,
-you will need to create a cloudflare account and [generate credentials](https://developers.cloudflare.com/calls/turn/generate-credentials/).
+The example code depends on cloudflare as a STUN/TURN server.
+To run the demo, you will need to create a cloudflare account
+and [generate credentials](https://developers.cloudflare.com/calls/turn/generate-credentials/).
 
 
 <details><summary><h2>Contents</h2></summary>
@@ -67,6 +68,9 @@ import { webrtc } from '@substrate-system/webrtc'
 ## develop
 
 Start a local websocket server and also a `vite` server for the front-end:
+
+To run the example, you will need to create a cloudflare account
+and [generate credentials](https://developers.cloudflare.com/calls/turn/generate-credentials/). Paste the credentials into `.dev.vars`.
 
 ```sh
 npm start

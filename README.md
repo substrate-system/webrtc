@@ -19,6 +19,8 @@ and [generate credentials](https://developers.cloudflare.com/calls/turn/generate
 - [use](#use)
   * [JS](#js)
 - [develop](#develop)
+  * [`.dev.vars`](#devvars)
+  * [state a local server](#state-a-local-server)
 
 <!-- tocstop -->
 
@@ -71,6 +73,19 @@ Start a local websocket server and also a `vite` server for the front-end:
 
 To run the example, you will need to create a cloudflare account
 and [generate credentials](https://developers.cloudflare.com/calls/turn/generate-credentials/). Paste the credentials into `.dev.vars`.
+
+### `.dev.vars`
+
+```sh
+# .dev.vars
+NODE_ENV="development"
+DEBUG="*"
+CF_TURN_NAME="my-server-name"
+CF_TURN_TOKEN_ID="123abc"
+CF_TURN_API_TOKEN="123bc"
+```
+
+### state a local server
 
 ```sh
 npm start

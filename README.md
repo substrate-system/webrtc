@@ -1,5 +1,11 @@
 # webrtc
 
+[![module](https://img.shields.io/badge/module-ESM%2FCJS-blue?style=flat-square)](README.md)
+[![semantic versioning](https://img.shields.io/badge/semver-2.0.0-blue?logo=semver&style=flat-square)](https://semver.org/)
+[![Common Changelog](https://nichoth.github.io/badge/common-changelog.svg)](./CHANGELOG.md)
+[![license](https://img.shields.io/badge/license-Polyform_Non_Commercial-26bc71?style=flat-square)](LICENSE)
+
+
 Webrtc for humans.
 
 The example code depends on cloudflare as a STUN/TURN server.
@@ -20,7 +26,7 @@ and [generate credentials](https://developers.cloudflare.com/calls/turn/generate
   * [JS](#js)
 - [develop](#develop)
   * [`.dev.vars`](#devvars)
-  * [state a local server](#state-a-local-server)
+  * [start a local server](#start-a-local-server)
 
 <!-- tocstop -->
 
@@ -85,7 +91,7 @@ CF_TURN_TOKEN_ID="123abc"
 CF_TURN_API_TOKEN="123bc"
 ```
 
-### state a local server
+### start a local server
 
 ```sh
 npm start

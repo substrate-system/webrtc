@@ -25,13 +25,13 @@ export const State = function ():{
 } {  // eslint-disable-line indent
     const party = Party()
 
-    // need to await a ky call to get config
     const me = new Peer({
         party,
     })
 
     const state = {
         me,
+        // need to await a ky call to get config
         config: signal<RTCConfiguration|null>(null),
         connections: signal<string[]>([]),
         party,

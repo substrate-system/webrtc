@@ -75,7 +75,7 @@ import { webrtc } from '@substrate-system/webrtc'
 
 ## develop
 
-Start a local websocket server and also a `vite` server for the hront-end.
+Start a local websocket server and also a `vite` server for the front-end.
 
 To run the example, you will need to create a cloudflare account
 and [generate credentials](https://developers.cloudflare.com/calls/turn/generate-credentials/). Paste the credentials into `.dev.vars`.

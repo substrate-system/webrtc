@@ -49,7 +49,7 @@ import { webrtc } from '@substrate-system/webrtc'
 
 ### Common JS
 ```js
-const webrtc = require('@substrate-system/webrtc/module')
+const webrtc = require('@substrate-system/webrtc')
 ```
 
 ### pre-built JS
@@ -75,7 +75,7 @@ import { webrtc } from '@substrate-system/webrtc'
 
 ## develop
 
-Start a local websocket server and also a `vite` server for the front-end:
+Start a local websocket server and also a `vite` server for the hront-end.
 
 To run the example, you will need to create a cloudflare account
 and [generate credentials](https://developers.cloudflare.com/calls/turn/generate-credentials/). Paste the credentials into `.dev.vars`.

@@ -82,7 +82,7 @@
     "typedoc": "^0.27.0",
     "typescript": "^5.7.2",
     "vite": "^6.0.7",
-    "wrangler": "^3.103.1"
+    "wrangler": "^4.0.0"
   },
   "author": "nichoth <nichoth@nichoth.com> (https://nichoth.com)",
   "license": "SEE LICENSE IN LICENSE"

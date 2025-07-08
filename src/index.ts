@@ -71,7 +71,6 @@ export class Peer {
 
         this._connections = null
         this.config = opts.config
-        // this._pc = new this._wrtc.RTCPeerConnection(this.config)
         this._emitter = createNanoEvents<PeerEvents>()
         this.polite = null  // first peer to connect is polite
         this._party = opts.party
@@ -95,8 +94,8 @@ export class Peer {
             debug('got a message in src file', msg)
 
             const connections = msg.connections
-            debug(':::::got a connection message:::::', connections)
             if (!connections) return  // only listen for connections messages
+            debug(':::::got a connection message:::::', connections)
 
             if ((connections.length > 1) && self.polite === null) {
                 // polite peer is 1st to connect

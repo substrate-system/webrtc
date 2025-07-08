@@ -2,7 +2,7 @@ import { ENV_URLS } from '../../_functions/CONSTANTS.js'
 import type { Env } from '../../_functions/types.js'
 import { DEFAULT_HEADERS } from '../../_functions/util.js'
 
-const PROD_URL = ENV_URLS['production']
+const PROD_URL = ENV_URLS.production
 
 /**
  * Any `OPTIONS` type request

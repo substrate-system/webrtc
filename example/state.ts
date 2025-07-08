@@ -55,12 +55,11 @@ State.getIceData = async function (
 ):Promise<void> {
     const config = await ky.post('/api/turn').json<RTCConfiguration>()
     debug('the config...', config)
+    debug('ice servers', config.iceServers)
+
     state.config.value = {
         ...config,
-        iceServers: [
-            // @ts-expect-error ??? is the API returning an old format?
-            config.iceServers
-        ]
+        iceServers: config.iceServers
     }
 }
 

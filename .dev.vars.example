@@ -1,5 +1,0 @@
-NODE_ENV="development"
-DEBUG="*"
-CF_TURN_NAME="name"
-CF_TURN_TOKEN_ID="abc123"
-CF_TURN_API_TOKEN="abc123"

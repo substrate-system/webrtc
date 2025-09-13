@@ -1,25 +1,87 @@
 :root {
     --primary-color: #4285f4;
+    --success: #5ce600;
+    --status-connecting: #f90; /* orange */
+    --status-connected: var(--success);  /* green */
+    --status-disconnected: #c00; /* red */
 }
 
 body {
     font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
+    margin-bottom: 20vh;
+}
 
-    & > div {
-        max-width: 30rem;
-        margin: 0 auto;
+/* the 2 column layout */
+div#root {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 2rem;
+    row-gap: 1rem;
+    margin: 0 2rem;
+
+    & >h1 {
+        flex-basis: 100%;
+        margin-bottom: 0;
+    }
+
+    /* overrides */
+    & .input-group {
+        & input {
+            width: calc(100% - 1rem);
+        }
     }
 }
 
+.col-half {
+    flex: 1;
+}
+
+textarea {
+    width: calc(100% - 2rem);
+    min-height: 10rem;
+    margin-bottom: 1rem;
+    padding: 1rem;
+}
+
+span.connection-status{
+    display: inline-block;
+    width: 0.75rem;
+    height: 0.75rem;
+    border-radius: 50%;
+    transition: background-color 0.3s ease;
+}
+
+/* Status-specific styles */
+.connection-status[data-status="connecting"] {
+    background-color: var(--status-connecting);
+    animation: pulse 2s infinite;
+}
+
+.connection-status[data-status="connected"] {
+    background-color: var(--status-connected);
+}
+
+.connection-status[data-status="disconnected"] {
+    background-color: var(--status-disconnected);
+}
+
 .status {
-    border-bottom: 2px solid;
+    border-bottom: 4px solid;
 
     &.disconnected {
         border-color: red;
     }
 
+    &.connecting {
+        border-color: orange;
+    }
+
+    &.in-room {
+        border-color: var(--primary-color, blue);
+    }
+
     &.connected {
-        border-color: green;
+        border-color: var(--success, green);
     }
 }
 
@@ -27,33 +89,6 @@ body {
     display: flex;
     margin-top: 2rem;
     justify-content: space-around;
-}
-
-.input-group {
-    & label {
-        top: 8px!important;
-    }
-
-    & input {
-        border: 1px solid transparent;
-        outline: 2px solid;
-        padding: 6px!important;
-        /* border: 3px solid transparent; */
-        border-bottom: 3px solid transparent!important;
-
-        &:focus {
-            outline: 2px solid transparent!important;
-            border: 1px solid black;
-            /* border-color: var(--primary-color)!important; */
-            border-bottom-color: var(--primary-color)!important;
-        }
-    }
-}
-
-.input-group input:focus ~ label,
-.input-group input:not(:placeholder-shown) ~ label {
-    top: -19px!important;
-    background-color: white!important;
 }
 
 hr {
@@ -86,8 +121,47 @@ button {
         &:hover {
             border-color: #1010104d;
             outline: 2px solid transparent;
-            /* outline: 1px solid rgba(16, 16, 16, 0.3); */
             background-color: transparent;
         }
+    }
+}
+
+.peer-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.peer-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem;
+    border: 1px solid #ccc;
+
+    & button {
+        min-width: 8rem;
+    }
+}
+
+.message-list {
+    height: 10rem;
+    overflow: scroll;
+    border: 1px solid #ccc;
+    padding: 1rem;
+    margin-bottom: 1rem;
+}
+
+.message {
+    padding: 0.25rem 0;
+    display: flex;
+    gap: 1rem;
+
+    & .sender {
+        font-weight: bold;
+    }
+
+    & .msg-content {
+        font-weight: lighter;
     }
 }

@@ -34,9 +34,9 @@ export default defineConfig({
         host: true,
         open: true,
         proxy: {
-            '/api': {
-                target: 'http://localhost:9999',
-                changeOrigin: true,
+            '/parties': {
+                target: 'http://localhost:1999',
+                changeOrigin: true
             },
         },
     },

@@ -19,7 +19,7 @@ div#root {
     row-gap: 1rem;
     margin: 0 2rem;
 
-    & >h1 {
+    &>h1 {
         flex-basis: 100%;
         margin-bottom: 0;
     }
@@ -134,6 +134,7 @@ button {
 
 .peer-item {
     display: flex;
+    gap: 1rem;
     justify-content: space-between;
     align-items: center;
     padding: 1rem;

@@ -1,5 +1,6 @@
 {
     "extends": ["stylelint-config-standard"],
+    "ignoreFiles": "public/**/*",
     "rules": {
         "comment-empty-line-before": null,
         "no-descending-specificity": null

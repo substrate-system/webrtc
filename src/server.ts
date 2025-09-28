@@ -18,11 +18,6 @@ export default class Server implements Party.Server {
         console.log('WebRTC signaling server started for room:', room.id)
     }
 
-    static async onBeforeConnect (req:Party.Request, _lobby:Party.Lobby) {
-        // auth could go here
-        return req
-    }
-
     /**
      * Handle HTTP requests for the TURN credentials.
      */
@@ -44,6 +39,7 @@ export default class Server implements Party.Server {
                         Authorization: `Bearer ${CF_TURN_API_TOKEN}`,
                         'Content-Type': 'application/json'
                     },
+                    method: 'POST',
                     body: JSON.stringify({ ttl: 86400 })
                 }
             )
@@ -77,7 +73,10 @@ export default class Server implements Party.Server {
         })
     }
 
-    async onConnect (conn:Party.Connection, _ctx:Party.ConnectionContext) {
+    async onConnect (
+        conn:Party.Connection,
+        _ctx:Party.ConnectionContext
+    ) {
         console.log(`New connection to room: ${this.room.id}`)
         this.peers.set(conn.id, { id: conn.id, conn })
         this.broadcastPeerList()
@@ -118,7 +117,7 @@ export default class Server implements Party.Server {
 
 Server satisfies Party.Worker
 
-function defaultHeaders ():Record<string, string> {
+export function defaultHeaders ():Record<string, string> {
     return {
         'Content-Type': 'application/json',
         'Access-Control-Allow-Origin': '*',

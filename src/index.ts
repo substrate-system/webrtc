@@ -4,7 +4,7 @@ import Debug from '@substrate-system/debug'
 const debug = Debug('src')
 
 /**
- * This is a ws message.
+ * This comes from the websocket only.
  */
 interface PeerList {
     type:'info:peerlist';
@@ -30,7 +30,6 @@ export interface WebRTCEvents {
     'peer-disconnect':(peerId:string)=>void;  // a peer disconnected
     'webrtc-close':(dc:RTCDataChannel)=>void
     raw:(ev:string|ArrayBuffer)=>void  // not JSON-serializable messages
-
     // a message from a peer
     message:(ev:{ data:string, peer:string })=>void|Promise<void>
 }
@@ -271,7 +270,10 @@ export class Connection {
 
         dc.addEventListener('close', () => {
             debug('dc close')
-            this.emitter.emit('peer-disconnect', this.peerIdByChannel.get(dc))
+            this._gotInfo = false
+            const peerId = this.peerIdByChannel.get(dc)
+            this.connections = this.connections.filter(c => c !== peerId)
+            this.emitter.emit('peer-disconnect', peerId)
         }, { once: true })
 
         /**
@@ -366,10 +368,8 @@ export class Connection {
     }
 
     send (msg:string|Blob|ArrayBuffer|ArrayBufferView<ArrayBuffer>) {
-        debug('sending from index.ts', msg)
         if (!this.dc) throw new Error('Not this.dc')
         this.dc!.send(msg as any)
-        debug('done sending it', this.dc)
     }
 }
 

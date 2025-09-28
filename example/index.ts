@@ -175,6 +175,7 @@ const Example:FunctionComponent<{
             <h3>Messages</h3>
             <div class="message-list" ref=${messageListRef}>
                 ${state.messages.value.map((msg:[string, string]) => {
+                    debug('msg', msg)
                     return html`<div class="message">
                         <span class="sender">${shorten(msg[0])}: </span>
                         <span class="msg-content">${msg[1]}</span>

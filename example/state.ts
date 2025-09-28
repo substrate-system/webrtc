@@ -1,7 +1,7 @@
 import { type Signal, signal, batch } from '@preact/signals'
 import Debug from '@substrate-system/debug'
 import { type Connection, connect } from '../src/index.js'
-import type PartySocket from 'partysocket'
+import PartySocket from 'partysocket'
 const debug = Debug('example:state')
 
 const PARTYKIT_HOST:string = (import.meta.env.DEV ?
@@ -47,7 +47,10 @@ State.ConnectWs = async function (state:ExampleState):Promise<void> {
             state.peerConnections.value = state.peerConnections.value.filter(id => {
                 return id !== peerId
             })
-            state.status.value = 'in-room'
+            state.status.value = (state.connection.value?.socket.readyState ===
+                PartySocket.OPEN) ?
+                'in-room' :
+                'disconnected'
         })
     })
 
@@ -65,7 +68,12 @@ State.ConnectWs = async function (state:ExampleState):Promise<void> {
 
     connection.on('peerlist', list => {
         debug('peerlist event', list)
-        state.availablePeers.value = list
+        debug('connections', state.connection.value?.connections)
+        // if we are already connected to a peer, then leave them in the list
+        state.availablePeers.value = [
+            ...list,
+            ...(state.connection.value?.connections || [])
+        ]
     })
 
     batch(() => {
@@ -106,8 +114,11 @@ State.connectToPeer = function (
 State.disconnectPeer = function (state:ExampleState, peerId:string) {
     const connection = state.connection.value
     connection?.peerDisconnect()
-    state.peerConnections.value = state.peerConnections.value.filter(c => {
-        return c !== peerId
+    batch(() => {
+        state.peerConnections.value = state.peerConnections.value.filter(c => {
+            return c !== peerId
+        })
+        state.status.value = 'in-room'
     })
 }
 
@@ -115,8 +126,14 @@ State.disconnectPeer = function (state:ExampleState, peerId:string) {
  * Disconnect from socket and peer.
  */
 State.disconnect = function (state:ExampleState) {
-    state.socket.value?.close()
     state.connection.value?.close()
+    state.socket.value?.close()
+
+    batch(() => {
+        state.availablePeers.value = []
+    })
+
+    state.status.value = 'disconnected'
 }
 
 /**

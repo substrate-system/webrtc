@@ -11,11 +11,18 @@
 
 WebRTC for humans.
 
-Use this module to simplify webrtc connections.
+Use this module to simplify [webrtc data channel connections](https://developer.mozilla.org/en-US/docs/Web/API/WebRTC_API/Using_data_channels).
+This library combines signaling events with webrtc events, because we only
+need to know about a few things &mdash; did we connect to a peer? which peers
+exist? and did we get a new message?
 
 <details><summary><h2>Contents</h2></summary>
 <!-- toc -->
 </details>
+
+[You can use the example app here]().
+
+![Screenshot of the example app](image.png)
 
 ## Install
 
@@ -26,21 +33,88 @@ npm i -S @substrate-system/webrtc
 ## Get Started
 
 You need 2 things: a [Partykit server](https://www.partykit.io/) and a
-[TURN server](https://webrtc.org/getting-started/turn-server).  The good news
+[TURN server](https://webrtc.org/getting-started/turn-server). The good news
 is that both of these are easy & free to use.
 
 For the TURN server, I recommend [Cloudflare's service](https://developers.cloudflare.com/realtime/turn/).
 It is easy to setup and free for demonstration purposes.
 
 If you want to run the example app locally, you will need to create a .env file
-following the example in [.env.example](./.env.example), replacing the
+following the example in [.env.example](./.env.example). Replace the
 variables with your own Cloudflare credentials.
 
 ### Websocket Server
 
+In [your Partykit project](https://docs.partykit.io/quickstart/),
+create a server that inherits from the `/server` path here. This is a
+[signaling server](https://developer.mozilla.org/en-US/docs/Web/API/WebRTC_API/Signaling_and_video_calling#the_signaling_server).
 
+See [./example_backend](./example_backend/).
 
-![Screenshot of the example app](image.png)
+```ts
+import type * as Party from 'partykit/server'
+import Server, { defaultHeaders } from '@substrate-system/webtrc/server'
+
+export default class PartyServer extends Server {
+    async onRequest (req:Party.Request):Promise<Response> {
+        const res = await super.onRequest(req)
+
+        // example: set the headers in response
+        return new Response(res.body, {
+            status: res.status,
+            statusText: res.statusText,
+            headers: defaultHeaders()
+        })
+    }
+}
+
+Server satisfies Party.Worker
+```
+
+### Client Example
+
+```ts
+import { type Connection, connect } from '@substrate-system/webrtc'
+import Debug from '@substrate-system/debug'
+const debug = Debug(true)
+
+const connection = await connect({
+    host: PARTYKIT_HOST,
+    room: 'example'
+})
+
+// now we are connected to the websocket server,
+// because we awaited the connection
+
+connection.on('message', ev => {
+    debug('message event', ev)
+})
+
+connection.on('peerlist', list => {
+    debug('peerlist event', list)
+})
+
+connection.on('peer', ([peerId, dc]) => {
+    // now we are connected to a peer
+    debug('peer', peerId)
+    debug('data channel', dc)
+})
+
+connection.on('message', ev => {
+    debug('got a message from peer', ev.peer)
+    debug('the message content', ev.data)
+})
+
+connection.on('peerlist', list => {
+    debug('the list of peers connected to the websocket:', list)
+})
+
+connection.on('peer', ([peerId, _dc]:[string, RTCDataChannel]) => {
+    // when a connection is established to a peer
+    debug('new peer connection', peerId)
+})
+```
+
 
 ## API
 
@@ -60,13 +134,13 @@ connection.on('message', (data) => {
 })
 ```
 
-## Quick Start
+## Develop
 
-1. Run `npm start` to start all servers (PartyKit, Cloudflare Pages, and Vite)
+1. Run `npm start` to start a vite localhost server and a partykit local server
 2. Open two browser windows to `http://localhost:8889`
 3. Use the same room ID in both windows
 4. Click "Connect" in both windows
-5. Start sending messages!
+5. Start sending messages
 
 ## Testing
 
@@ -78,8 +152,6 @@ Run `npm test` to execute the automated integration tests that:
 
 
 ## Modules
-
-This exposes ESM and common JS via [package.json `exports` field](https://nodejs.org/api/packages.html#exports).
 
 ### ESM
 ```js
@@ -105,13 +177,6 @@ cp ./node_modules/@substrate-system/webrtc/dist/index.min.js ./public/webrtc.min
 <script type="module" src="/webrtc.min.js"></script>
 ```
 
-## Use
-
-### JS
-```js
-import { webrtc } from '@substrate-system/webrtc'
-```
-
 ## Develop
 
 Start a local websocket server, a local lambda function server,
@@ -125,7 +190,7 @@ To run the example, you will need to create a cloudflare account
 and [generate credentials](https://developers.cloudflare.com/calls/turn/generate-credentials/).
 Paste the credentials into `.dev.vars`.
 
-### deploy
+### Deploy
 
 Deploying the backend means [deploying partykit](https://docs.partykit.io/guides/deploying-your-partykit-server/).
 
@@ -152,6 +217,8 @@ CF_TURN_API_TOKEN="123bc"
 
 
 ## [Perfect Negotiation](https://developer.mozilla.org/en-US/docs/Web/API/WebRTC_API/Perfect_negotiation)
+
+The pattern to establish a connection.
 
 > Because WebRTC doesn't mandate a specific transport mechanism for signaling
 > during the negotiation of a new peer connection, it's highly flexible.
@@ -183,12 +250,6 @@ between offers.
 
 The two peers can then work together to manage signaling in a way that
 doesn't deadlock.
-
-1. Create the signaling channel. For us this is Partykit.
-
-
-
-
 
 ## See Also
 

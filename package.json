@@ -12,15 +12,13 @@
       "import": "./dist/index.js",
       "require": "./dist/index.cjs"
     },
+    "./server": {
+      "import": "./dist/server.js",
+      "require": "./dist/server.cjs"
+    },
     "./*": {
-      "import": [
-        "./dist/*.js",
-        "./dist/*"
-      ],
-      "require": [
-        "./dist/*.cjs",
-        "./dist/*"
-      ]
+      "import": "./dist/*.js",
+      "require": "./dist/*.cjs"
     }
   },
   "scripts": {
@@ -28,11 +26,10 @@
     "lint:all": "npm run lint && npm run stylelint",
     "stylelint": "stylelint \"**/*.css\"",
     "deploy:party": "partykit deploy",
-    "build-tests": "esbuild test/index.ts --target=es2020 --bundle --keep-names > test/test-bundle.js",
-    "test": "npm run build && npm run test:node",
-    "test:node": "node test/test.js",
+    "test": "bash -c 'cd ./test && esbuild --platform=node --format=esm index.ts | node --input-type=module'",
     "test:browser": "concurrently --kill-others -s first \"npm run start:party\" \"wait-on http://localhost:1999/parties/main/test && npm run test:browser:js\"",
     "test:browser:js": "esbuild --bundle ./test/browser/index.ts | npx tapout",
+    "test:playwright": "concurrently --kill-others -s first \"npm run start:party\" \"wait-on http://localhost:1999/parties/main/test && npx playwright test\"",
     "build-cjs": "esbuild src/*.ts --format=cjs --keep-names --tsconfig=tsconfig.build.json --outdir=./dist --out-extension:.js=.cjs --sourcemap",
     "build-cjs:min": "esbuild src/*.ts --format=cjs --minify --keep-names --tsconfig=tsconfig.build.json --outdir=./dist --out-extension:.js=.min.cjs --sourcemap",
     "build-esm": "esbuild src/*.ts --format=esm --metafile=dist/meta.json --keep-names --tsconfig=tsconfig.build.json --outdir=./dist --sourcemap && tsc --emitDeclarationOnly --project tsconfig.build.json --outDir dist",
@@ -66,7 +63,7 @@
     "@typescript-eslint/parser": "^8.19.1",
     "auto-changelog": "^2.4.0",
     "concurrently": "^9.1.2",
-    "dotenv": "^17.1.0",
+    "dotenv": "^17.2.2",
     "esbuild": "^0.25.10",
     "eslint": "^8.57.0",
     "eslint-config-standard": "^17.1.0",
@@ -75,6 +72,7 @@
     "markdown-toc": "^1.2.0",
     "partykit": "^0.0.114",
     "partysocket": "^1.0.3",
+    "playwright": "^1.55.1",
     "postcss-nesting": "^13.0.1",
     "preact": "^10.25.4",
     "stylelint": "^16.13.0",

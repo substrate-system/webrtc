@@ -1,11 +1,11 @@
 node_modules
 bundle.js
 .DS_Store
-test/*.js
 dist
 .env
 public
 example/.partykit
 .partykit
 .dev.vars
-.wrangler
+.claude
+test/test-bundle.js

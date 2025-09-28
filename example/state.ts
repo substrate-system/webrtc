@@ -41,6 +41,10 @@ State.ConnectWs = async function (state:ExampleState):Promise<void> {
         room: state.roomId.value
     })
 
+    connection.on('peer', ([peerId, _dc]) => {
+        debug('peer event', peerId)
+    })
+
     connection.on('peer-disconnect', peerId => {
         debug('the disconnection event', peerId)
         batch(() => {
@@ -54,8 +58,8 @@ State.ConnectWs = async function (state:ExampleState):Promise<void> {
         })
     })
 
-    connection.on('datachannel', () => {
-        debug('got the datachannel event!')
+    connection.on('datachannel', (dc) => {
+        debug('got the datachannel event', dc)
     })
 
     connection.on('message', ev => {
@@ -82,7 +86,7 @@ State.ConnectWs = async function (state:ExampleState):Promise<void> {
         state.socket.value = connection.socket
     })
 
-    connection.on('peer', ([peerId]) => {
+    connection.on('peer', ([peerId, _dc]:[string, RTCDataChannel]) => {
         batch(() => {
             state.peerConnections.value = Array.from(new Set([
                 ...state.peerConnections.value,
@@ -100,6 +104,10 @@ State.connectToPeer = function (
     if (!state.connection.value) throw new Error('not connection')
 
     state.status.value = 'connecting'
+
+    state.connection.value.once('peer', (p) => {
+        debug('peer', p)
+    })
 
     return new Promise(resolve => {
         state.connection.value?.once('datachannel', (dc:RTCDataChannel) => {

@@ -26,7 +26,7 @@ export interface WebRTCEvents {
     peerlist:(peers:string[]) => void;  // when you first connect, a list of peer IDs
     socket:(ws:PartySocket)=>void;  // when websocket connects
     datachannel:(dc:RTCDataChannel)=>void;  // when webRTC is connected
-    peer:([string, RTCDataChannel])=>void;  // when a peer is connected via rtc
+    peer:(arg:[string, RTCDataChannel])=>void;  // when a peer is connected via rtc
     'peer-disconnect':(peerId:string)=>void;  // a peer disconnected
     'webrtc-close':(dc:RTCDataChannel)=>void
     raw:(ev:string|ArrayBuffer)=>void  // not JSON-serializable messages

@@ -29,7 +29,6 @@ export interface WebRTCEvents {
     peer:(arg:[string, RTCDataChannel])=>void;  // when a peer is connected via rtc
     'peer-disconnect':(peerId:string)=>void;  // a peer disconnected
     'webrtc-close':(dc:RTCDataChannel)=>void
-    raw:(ev:string|ArrayBuffer)=>void  // not JSON-serializable messages
     // a message from a peer
     message:(ev:{ data:string, peer:string })=>void|Promise<void>
 }
@@ -280,7 +279,6 @@ export class Connection {
          * The new peer sends us their peer ID as the first message.
          */
         dc.addEventListener('message', ev => {
-            debug('ev.data', ev.data)
             if (this._gotInfo) {
                 return this.emitter.emit('message', {
                     data: ev.data,
@@ -306,7 +304,6 @@ export class Connection {
             if (data.type === 'info') {
                 this._gotInfo = true
                 const info:InfoMessage = data
-                debug('got the info message', info)
 
                 this.connections = Array.from(new Set([
                     ...this.connections,
@@ -378,12 +375,12 @@ export class Connection {
  * is connected. After that, you need to call `connectToPeer` on the Connection.
  *
  * @returns {Promise<Connection>} A promise that resolves when the
- *                                webrtc connects
+ *                                socket connects.
  */
 export function connect ({
     host,
     room
-}:{ host:string; room:string; }):Promise<InstanceType<typeof Connection>> {
+}:{ host:string; room:string; }):Promise<Connection> {
     const connection = new Connection({ host, room })
 
     return new Promise<Connection>(resolve => {

@@ -4,23 +4,56 @@
 [![module](https://img.shields.io/badge/module-ESM%2FCJS-blue?style=flat-square)](README.md)
 [![semantic versioning](https://img.shields.io/badge/semver-2.0.0-blue?logo=semver&style=flat-square)](https://semver.org/)
 [![Common Changelog](https://nichoth.github.io/badge/common-changelog.svg)](./CHANGELOG.md)
-[![install size](https://flat.badgen.net/packagephobia/install/@substrate-system/webrtc)](https://packagephobia.com/result?p=@substrate-system/webrtc)
-[![GZip size](https://img.shields.io/bundlephobia/minzip/@substrate-system/webrtc?style=flat-square)](https://bundlephobia.com/package/@substrate-system/webrtc)
+[![install size](https://flat.badgen.net/packagephobia/install/@substrate-system/webrtc?cache=no)](https://packagephobia.com/result?p=@substrate-system/webrtc)
+[![GZip size](https://img.shields.io/bundlephobia/minzip/@substrate-system/webrtc?style=flat-square&cache=no)](https://bundlephobia.com/package/@substrate-system/webrtc)
 [![license](https://img.shields.io/badge/license-Big_Time-blue?style=flat-square)](LICENSE)
 
 
-WebRTC for humans.
+Simple peer-to-peer connections. Use this module to simplify
+[webrtc data channel connections](https://developer.mozilla.org/en-US/docs/Web/API/WebRTC_API/Using_data_channels).
+This combines signaling events with webrtc events, because in practice, you
+only need to know a few things for peer connections &mdash; did we connect to a
+peer? which peers exist? and did we get a new message?
 
-Use this module to simplify [webrtc data channel connections](https://developer.mozilla.org/en-US/docs/Web/API/WebRTC_API/Using_data_channels).
-This library combines signaling events with webrtc events, because we only
-need to know about a few things &mdash; did we connect to a peer? which peers
-exist? and did we get a new message?
+> [!WARNING]  
+> WIP status.
 
 <details><summary><h2>Contents</h2></summary>
+
 <!-- toc -->
+
+- [Install](#install)
+- [Get Started](#get-started)
+  * [Websocket Server](#websocket-server)
+  * [Client Example](#client-example)
+- [API](#api)
+  * [Client-Side](#client-side)
+    + [`connect`](#connect)
+    + [Events](#events)
+      - [`peerlist`](#peerlist)
+      - [`socket`](#socket)
+      - [`message`](#message)
+      - [`datachannel`](#datachannel)
+      - [`peer`](#peer)
+      - [`peer-disconnect`](#peer-disconnect)
+      - [`webrtc-close`](#webrtc-close)
+- [Modules](#modules)
+  * [ESM](#esm)
+  * [Common JS](#common-js)
+  * [pre-built JS](#pre-built-js)
+    + [copy](#copy)
+    + [HTML](#html)
+- [Develop](#develop)
+  * [Deploy](#deploy)
+  * [`.env` file](#env-file)
+- [Perfect Negotiation](#perfect-negotiation)
+- [See Also](#see-also)
+
+<!-- tocstop -->
+
 </details>
 
-[You can use the example app here]().
+[You can use the example app here](https://substrate-system.github.io/webrtc/).
 
 ![Screenshot of the example app](image.png)
 
@@ -73,6 +106,8 @@ Server satisfies Party.Worker
 
 ### Client Example
 
+This is the browser-side code.
+
 ```ts
 import { type Connection, connect } from '@substrate-system/webrtc'
 import Debug from '@substrate-system/debug'
@@ -118,37 +153,97 @@ connection.on('peer', ([peerId, _dc]:[string, RTCDataChannel]) => {
 
 ## API
 
-```js
-import { webrtc } from '@substrate-system/webrtc'
+### Client-Side
 
-// Create a connection with a room ID
-const connection = webrtc('my-unique-room-id')
+#### `connect`
 
-connection.on('open', () => {
-  console.log('Connected!')
-  connection.send('Hello!')
-})
-
-connection.on('message', (data) => {
-  console.log('Received:', data)
-})
+```ts
+export function connect ({
+    host,
+    room
+}:{ host:string; room:string; }):Promise<Connection>
 ```
 
-## Develop
+Create a websocket connection to the given host.
 
-1. Run `npm start` to start a vite localhost server and a partykit local server
-2. Open two browser windows to `http://localhost:8889`
-3. Use the same room ID in both windows
-4. Click "Connect" in both windows
-5. Start sending messages
+#### Events
 
-## Testing
+##### `peerlist`
 
-Run `npm test` to execute the automated integration tests that:
-- Start local PartyKit and Cloudflare servers
-- Wait for servers to be ready
-- Run two browser instances with tapzero tests
-- Verify WebRTC connections work end-to-end
+```ts
+peerlist:(peers:string[]) => void
+```
+
+Emitted when you first connect to the websocket server with a list of peer
+IDs currently in the room.
+
+**Parameters:** `peers: string[]`
+
+##### `socket`
+
+```ts
+socket:(ws:PartySocket)=>void
+```
+
+Emitted when the websocket connection is established.
+
+**Parameters:** `ws: PartySocket`
+
+##### `message`
+
+```ts
+message:(ev:{ data:string, peer:string })=>void|Promise<void>
+```
+
+Emitted when a message is received from a connected peer. Includes the
+message data and the sender's peer ID.
+
+**Parameters:** `{ data: string, peer: string }`
+
+
+##### `datachannel`
+
+```ts
+datachannel:(dc:RTCDataChannel)=>void
+```
+
+Emitted when a WebRTC data channel connection is established.
+
+**Parameters:** `dc: RTCDataChannel`
+
+##### `peer`
+
+```ts
+peer:(arg:[string, RTCDataChannel])=>void
+```
+
+Emitted when a peer is successfully connected via WebRTC. Provides both the
+peer ID and the data channel.
+
+**Parameters:** `[peerId: string, dc: RTCDataChannel]`
+
+##### `peer-disconnect`
+
+```ts
+'peer-disconnect':(peerId:string)=>void
+```
+
+Emitted when a peer disconnects from the WebRTC connection.
+
+**Parameters:** `peerId: string`
+
+##### `webrtc-close`
+
+```ts
+'webrtc-close':(dc:RTCDataChannel)=>void
+```
+
+Emitted when a WebRTC data channel is closed.
+
+**Parameters:** `dc: RTCDataChannel`
+
+
+-------------------------------------------------------------
 
 
 ## Modules
@@ -179,8 +274,7 @@ cp ./node_modules/@substrate-system/webrtc/dist/index.min.js ./public/webrtc.min
 
 ## Develop
 
-Start a local websocket server, a local lambda function server,
-and also a `vite` server for the front-end.
+Start a local websocket server and a local `vite` server for the front-end.
 
 ```sh
 npm start
@@ -207,7 +301,6 @@ npx partykit deploy --with-vars
 # .env
 NODE_ENV="development"
 DEBUG="*"
-CF_TURN_NAME="my-server-name"
 CF_TURN_TOKEN_ID="123abc"
 CF_TURN_API_TOKEN="123bc"
 ```
@@ -216,9 +309,10 @@ CF_TURN_API_TOKEN="123bc"
 -------
 
 
-## [Perfect Negotiation](https://developer.mozilla.org/en-US/docs/Web/API/WebRTC_API/Perfect_negotiation)
+## Perfect Negotiation
 
-The pattern to establish a connection.
+This uses the [Perfect Negotiation pattern](https://developer.mozilla.org/en-US/docs/Web/API/WebRTC_API/Perfect_negotiation)
+to establish a connection.
 
 > Because WebRTC doesn't mandate a specific transport mechanism for signaling
 > during the negotiation of a new peer connection, it's highly flexible.
@@ -244,12 +338,13 @@ Assign each of the two peers a role to play in the negotiation process:
 Both peers know exactly what should happen if there are collisions
 between offers.
 
-
 **We assign the polite role to the first peer to connect to the**
 **signaling server**.
 
 The two peers can then work together to manage signaling in a way that
 doesn't deadlock.
+
+
 
 ## See Also
 

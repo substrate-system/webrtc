@@ -1,12 +1,8 @@
 {
   "name": "@substrate-system/webrtc",
-  "private": true,
-  "type": "module",
   "version": "0.0.0",
-  "main": "dist/index.js",
-  "files": [
-    "./dist/*"
-  ],
+  "description": "WebRTC, simplified.",
+  "type": "module",
   "exports": {
     ".": {
       "import": "./dist/index.js",
@@ -21,6 +17,15 @@
       "require": "./dist/*.cjs"
     }
   },
+  "main": "dist/index.js",
+  "types": "./dist/index.d.ts",
+  "directories": {
+    "example": "example",
+    "test": "test"
+  },
+  "files": [
+    "./dist/*"
+  ],
   "scripts": {
     "lint": "eslint \"./**/*.{ts,js}\"",
     "lint:all": "npm run lint && npm run stylelint",
@@ -40,7 +45,7 @@
     "build": "mkdir -p ./dist && rm -rf ./dist/* && npm run build-cjs && npm run build-esm && npm run build-esm:min && npm run build-cjs:min",
     "start": "mkdir -p public && cp ./_public/* public && concurrently --kill-others \"npm run start:party\" \"npx vite\"",
     "start:party": "partykit dev --config example_backend/partykit.json --port 1999",
-    "toc": "markdown-toc --maxdepth 3 -i README.md",
+    "toc": "markdown-toc --maxdepth 5 -i README.md",
     "preversion": "npm run lint",
     "version": "npm run toc && auto-changelog -p --template keepachangelog --breaking-pattern 'BREAKING CHANGE:' && git add CHANGELOG.md README.md",
     "postversion": "git push --follow-tags && npm publish",
@@ -81,6 +86,20 @@
     "typedoc": "^0.28.1",
     "typescript": "^5.9.2",
     "vite": "^7.1.7"
+  },
+  "keywords": [
+    "webrtc",
+    "rtc",
+    "peer",
+    "p2p"
+  ],
+  "homepage": "https://github.com/substrate-system/webrtc",
+  "bugs": {
+    "url": "https://github.com/substrate-system/webrtc/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/substrate-system/webrtc.git"
   },
   "author": "nichoth <nichoth@nichoth.com> (https://nichoth.com)",
   "license": "SEE LICENSE IN LICENSE"

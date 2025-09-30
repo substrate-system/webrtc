@@ -1,6 +1,6 @@
 {
   "name": "@substrate-system/webrtc",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "WebRTC, simplified.",
   "type": "module",
   "exports": {

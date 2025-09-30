@@ -245,6 +245,83 @@ Emitted when a WebRTC data channel is closed.
 
 -------------------------------------------------------------
 
+## Security
+
+### End-to-End Encryption
+
+**Your messages between clients are encrypted end-to-end.**
+WebRTC data channels use [DTLS (Datagram Transport Layer Security)](https://developer.mozilla.org/en-US/docs/Glossary/DTLS)
+and [SRTP (Secure Real-time Transport Protocol)](https://developer.mozilla.org/en-US/docs/Glossary/RTP)
+by default. This means:
+
+* All peer-to-peer communication is encrypted before it leaves your
+  browser
+* Only the sending and receiving peers can decrypt the messages
+* Encryption keys are negotiated directly between peers using
+  [DTLS-SRTP](https://webrtc-security.github.io/#4.3.2.) key exchange
+* Encryption is mandatory in WebRTC — there is no "unencrypted
+  mode"
+
+### What the Signaling Server Can See
+
+The **Partykit (signaling) server** facilitates the initial connection
+setup, but **cannot read your peer-to-peer messages**. The signaling
+server can see:
+
+* Connection metadata (who is connecting to whom)
+* Peer IDs and room names
+* WebRTC session descriptions (SDP) — these contain network information
+  like IP addresses and supported codecs
+* ICE candidates — potential network paths for establishing connections
+* Presence information (who joined/left the room)
+
+**What it CANNOT see:**
+
+* The actual content of messages sent through WebRTC data channels
+* Any data transmitted peer-to-peer after the connection is established
+* Encryption keys (these are negotiated directly between peers)
+
+The signaling server's role ends once the peer-to-peer connection is
+established. After that, data flows directly between peers, bypassing
+the signaling server entirely.
+
+### What the TURN Server Can See
+
+The [Cloudflare TURN server](https://developers.cloudflare.com/realtime/turn/)
+is used only when a direct peer-to-peer connection cannot be established
+(typically due to restrictive NATs or firewalls).
+
+When TURN is used:
+
+**What it CAN see:**
+- That encrypted packets are being relayed between two peers
+- The size and timing of packets
+- Source and destination IP addresses
+- The volume of traffic
+
+**What it CANNOT see:**
+- The content of your messages (packets are encrypted with DTLS)
+- Encryption keys
+- Any decrypted data
+
+The TURN server is a blind relay &mdash; it forwards encrypted
+packets without being able to decrypt them.
+
+### Summary
+
+| Component | Can See Metadata | Can Read Messages |
+|-----------|------------------|-------------------|
+| **Signaling Server (WebSocket)** | ✅ Yes | ❌ No |
+| **TURN Server (Cloudflare)** | ✅ Yes | ❌ No |
+| **Peers (You & Other Clients)** | ✅ Yes | ✅ Yes |
+
+Your peer-to-peer messages are protected by end-to-end encryption.
+Neither the signaling server nor the TURN server can decrypt your
+communications.
+
+
+--------------------------------------------------------------
+
 
 ## Modules
 
@@ -350,3 +427,7 @@ doesn't deadlock.
 
 * [fippo/minimal-webrtc](https://github.com/fippo/minimal-webrtc)
 * [Establishing a connection: The WebRTC perfect negotiation pattern](https://developer.mozilla.org/en-US/docs/Web/API/WebRTC_API/Perfect_negotiation).
+* [A Study of WebRTC Security](https://webrtc-security.github.io/)
+* [WebRTC For The Curious](https://webrtcforthecurious.com/)
+> _WebRTC For The Curious_ is an open-source book created by WebRTC implementers
+> to share their hard-earned knowledge with the world.

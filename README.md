@@ -24,6 +24,8 @@ peer? which peers exist? and did we get a new message?
 
 - [Install](#install)
 - [Get Started](#get-started)
+  * [Logs](#logs)
+  * [Servers](#servers)
   * [Websocket Server](#websocket-server)
   * [Client Example](#client-example)
 - [API](#api)

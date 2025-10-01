@@ -52,7 +52,8 @@
     "prepublishOnly": "npm run build"
   },
   "dependencies": {
-    "nanoevents": "^9.1.0"
+    "nanoevents": "^9.1.0",
+    "partysocket": "^1.0.3"
   },
   "devDependencies": {
     "@nichoth/components": "^0.16.16",
@@ -76,7 +77,6 @@
     "ky": "^1.7.4",
     "markdown-toc": "^1.2.0",
     "partykit": "^0.0.114",
-    "partysocket": "^1.0.3",
     "playwright": "^1.55.1",
     "postcss-nesting": "^13.0.1",
     "preact": "^10.25.4",

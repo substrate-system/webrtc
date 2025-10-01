@@ -1,7 +1,7 @@
 import { PartySocket } from 'partysocket'
 import { createNanoEvents as Nanoevents } from 'nanoevents'
 import Debug from '@substrate-system/debug'
-const debug = Debug('src')
+const debug = Debug('webrtc')
 
 /**
  * This comes from the websocket only.

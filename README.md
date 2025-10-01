@@ -70,6 +70,18 @@ npm i -S @substrate-system/webrtc
 
 ## Get Started
 
+### Logs
+
+We use [@substrate-system/debug](https://github.com/substrate-system/debug) for
+logging. In the browser, you can set the key `DEBUG` to `webrtc` to enable
+logging in the browser.
+
+```js
+window.localStorage.setItem('DEBUG', 'webrtc')
+```
+
+### Servers
+
 You need 2 things: a [Partykit server](https://www.partykit.io/) and a
 [TURN server](https://webrtc.org/getting-started/turn-server). The good news
 is that both of these are easy & free to use.

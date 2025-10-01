@@ -52,6 +52,7 @@
     "prepublishOnly": "npm run build"
   },
   "dependencies": {
+    "@substrate-system/debug": "^0.9.23",
     "nanoevents": "^9.1.0",
     "partysocket": "^1.0.3"
   },
@@ -60,7 +61,6 @@
     "@preact/preset-vite": "^2.10.2",
     "@preact/signals": "^2.3.1",
     "@substrate-system/a11y": "^0.0.13",
-    "@substrate-system/debug": "^0.9.0",
     "@substrate-system/tapout": "^0.0.24",
     "@substrate-system/tapzero": "^0.10.15",
     "@substrate-system/wait-on": "^8.0.3",

@@ -125,7 +125,7 @@ Server satisfies Party.Worker
 
 ### Client Example
 
-This is the browser-side code.
+This is browser-side code.
 
 ```ts
 import { type Connection, connect } from '@substrate-system/webrtc'
@@ -177,10 +177,10 @@ connection.on('peer', ([peerId, _dc]:[string, RTCDataChannel]) => {
 #### `connect`
 
 ```ts
-export function connect ({
-    host,
-    room
-}:{ host:string; room:string; }):Promise<Connection>
+export function connect ({ host, room }:{
+  host:string;
+  room:string;
+}):Promise<Connection>
 ```
 
 Create a websocket connection to the given host.
@@ -273,13 +273,13 @@ WebRTC data channels use [DTLS (Datagram Transport Layer Security)](https://deve
 and [SRTP (Secure Real-time Transport Protocol)](https://developer.mozilla.org/en-US/docs/Glossary/RTP)
 by default. This means:
 
-* All peer-to-peer communication is encrypted before it leaves your
-  browser
+* All peer-to-peer communication is encrypted before it leaves
+  your browser
 * Only the sending and receiving peers can decrypt the messages
 * Encryption keys are negotiated directly between peers using
   [DTLS-SRTP](https://webrtc-security.github.io/#4.3.2.) key exchange
-* Encryption is mandatory in WebRTC — there is no "unencrypted
-  mode"
+* Encryption is mandatory in WebRTC — there is no
+  "unencrypted mode"
 
 ### What the Signaling Server Can See
 
@@ -321,7 +321,7 @@ When TURN is used:
 **What it CANNOT see:**
 - The content of your messages (packets are encrypted with DTLS)
 - Encryption keys
-- Any decrypted data
+- Decrypted data
 
 The TURN server is a blind relay &mdash; it forwards encrypted
 packets without being able to decrypt them.
@@ -334,9 +334,8 @@ packets without being able to decrypt them.
 | **TURN Server (Cloudflare)** | ✅ Yes | ❌ No |
 | **Peers (You & Other Clients)** | ✅ Yes | ✅ Yes |
 
-Your peer-to-peer messages are protected by end-to-end encryption.
-Neither the signaling server nor the TURN server can decrypt your
-communications.
+The peer-to-peer messages are protected by end-to-end encryption.
+Neither the signaling server nor the TURN server can decrypt the messages.
 
 
 --------------------------------------------------------------

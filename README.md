@@ -433,6 +433,11 @@ doesn't deadlock.
 * [fippo/minimal-webrtc](https://github.com/fippo/minimal-webrtc)
 * [Establishing a connection: The WebRTC perfect negotiation pattern](https://developer.mozilla.org/en-US/docs/Web/API/WebRTC_API/Perfect_negotiation).
 * [A Study of WebRTC Security](https://webrtc-security.github.io/)
+* [Why WebRTC encryption is a must for security](https://telnyx.com/resources/webrtc-encryption-and-security)
+* [webrtchacks.com](https://webrtchacks.com/)
+* [WebRTC and Man in the Middle Attacks](https://webrtchacks.com/webrtc-and-man-in-the-middle-attacks/)
+* [shinyoshiaki/werift-webrtc](https://github.com/shinyoshiaki/werift-webrtc)
+* [WebRTC Security: How Safe Is It?](https://antmedia.io/webrtc-security/)
 * [WebRTC For The Curious](https://webrtcforthecurious.com/)
 > _WebRTC For The Curious_ is an open-source book created by WebRTC implementers
 > to share their hard-earned knowledge with the world.

@@ -24,6 +24,7 @@ peer? which peers exist? and did we get a new message?
 
 - [Install](#install)
 - [Get Started](#get-started)
+  * [`.env` file](#env-file)
   * [Logs](#logs)
   * [Servers](#servers)
   * [Websocket Server](#websocket-server)
@@ -46,13 +47,11 @@ peer? which peers exist? and did we get a new message?
   * [Summary](#summary)
 - [Modules](#modules)
   * [ESM](#esm)
-  * [Common JS](#common-js)
   * [pre-built JS](#pre-built-js)
     + [copy](#copy)
     + [HTML](#html)
 - [Develop](#develop)
   * [Deploy](#deploy)
-  * [`.env` file](#env-file)
 - [Perfect Negotiation](#perfect-negotiation)
 - [See Also](#see-also)
 
@@ -71,6 +70,21 @@ npm i -S @substrate-system/webrtc
 ## Get Started
 
 [You can use the example app here](https://substrate-system.github.io/webrtc/).
+
+
+### `.env` file
+
+You need to provide a Clouflare TURN server.
+
+```sh
+# .env
+NODE_ENV="development"
+DEBUG="*"
+CF_TURN_TOKEN_ID="123abc"
+CF_TURN_API_TOKEN="123bc"
+```
+
+
 
 ### Logs
 
@@ -354,11 +368,6 @@ Neither the signaling server nor the TURN server can decrypt the messages.
 import { webrtc } from '@substrate-system/webrtc'
 ```
 
-### Common JS
-```js
-const webrtc = require('@substrate-system/webrtc')
-```
-
 ### pre-built JS
 This package exposes minified JS files too. Copy them to a location that is
 accessible to your web server, then link to them in HTML.
@@ -395,17 +404,6 @@ To deploy with environment variables in a `.env` file, run with the flag
 ```sh
 npx partykit deploy --with-vars
 ```
-
-### `.env` file
-
-```sh
-# .env
-NODE_ENV="development"
-DEBUG="*"
-CF_TURN_TOKEN_ID="123abc"
-CF_TURN_API_TOKEN="123bc"
-```
-
 
 -------
 

@@ -9,7 +9,7 @@
 [![license](https://img.shields.io/badge/license-Big_Time-blue?style=flat-square)](LICENSE)
 
 
-Simple peer-to-peer connections. Use this module to simplify
+Simpler peer-to-peer connections. Use this module to simplify
 [webrtc data channel connections](https://developer.mozilla.org/en-US/docs/Web/API/WebRTC_API/Using_data_channels).
 This combines signaling events with webrtc events, because in practice, you
 only need to know a few things for peer connections &mdash; did we connect to a
@@ -60,8 +60,6 @@ peer? which peers exist? and did we get a new message?
 
 </details>
 
-[You can use the example app here](https://substrate-system.github.io/webrtc/).
-
 ![Screenshot of the example app](image.png)
 
 ## Install
@@ -71,6 +69,8 @@ npm i -S @substrate-system/webrtc
 ```
 
 ## Get Started
+
+[You can use the example app here](https://substrate-system.github.io/webrtc/).
 
 ### Logs
 

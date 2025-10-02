@@ -1,7 +1,17 @@
 import { PartySocket } from 'partysocket'
 import { createNanoEvents as Nanoevents } from 'nanoevents'
-import Debug from '@substrate-system/debug'
-const debug = Debug('webrtc')
+
+// Dynamic import so we can factor out of production build
+let debug = (..._args:any[]) => {} // no-op by default
+
+window.localStorage.setItem('DEBUG', 'webrtc')
+
+try {
+    const Debug = (await import('@substrate-system/debug')).default
+    debug = Debug('webrtc')
+} catch (_err) {
+    // no debug, carry on
+}
 
 /**
  * This comes from the websocket only.

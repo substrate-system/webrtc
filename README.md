@@ -82,6 +82,12 @@ logging in the browser.
 window.localStorage.setItem('DEBUG', 'webrtc')
 ```
 
+This package dynamically imports [@substrate-system/debug](https://github.com/substrate-system/debug);
+it is an `optionalDependency`. If you want to use the debug logs for this module,
+then your application should use an [HTML `importmap`](https://www.honeybadger.io/blog/import-maps/)
+to map `@substrate-system/debug` to the debug module.
+
+
 ### Servers
 
 You need 2 things: a [Partykit server](https://www.partykit.io/) and a

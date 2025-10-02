@@ -35,14 +35,12 @@
     "test:browser": "concurrently --kill-others -s first \"npm run start:party\" \"wait-on http://localhost:1999/parties/main/test && npm run test:browser:js\"",
     "test:browser:js": "esbuild --bundle ./test/browser/index.ts | npx tapout",
     "test:playwright": "concurrently --kill-others -s first \"npm run start:party\" \"wait-on http://localhost:1999/parties/main/test && npx playwright test\"",
-    "build-cjs": "esbuild src/*.ts --format=cjs --keep-names --tsconfig=tsconfig.build.json --outdir=./dist --out-extension:.js=.cjs --sourcemap",
-    "build-cjs:min": "esbuild src/*.ts --format=cjs --minify --keep-names --tsconfig=tsconfig.build.json --outdir=./dist --out-extension:.js=.min.cjs --sourcemap",
     "build-esm": "esbuild src/*.ts --format=esm --metafile=dist/meta.json --keep-names --tsconfig=tsconfig.build.json --outdir=./dist --sourcemap && tsc --emitDeclarationOnly --project tsconfig.build.json --outDir dist",
     "build-esm:min": "esbuild ./src/*.ts --format=esm --keep-names --bundle --tsconfig=tsconfig.build.json --minify --out-extension:.js=.min.js --outdir=./dist --sourcemap",
     "build-example": "mkdir -p ./public && rm -rf ./public/* && VITE_DEBUG_MODE=staging vite --mode staging --base=\"/webrtc\" build",
     "build-example:local": "mkdir -p ./public && rm -rf ./public/* && vite --mode development build",
     "build-docs": "typedoc ./src/index.ts",
-    "build": "mkdir -p ./dist && rm -rf ./dist/* && npm run build-cjs && npm run build-esm && npm run build-esm:min && npm run build-cjs:min",
+    "build": "mkdir -p ./dist && rm -rf ./dist/* && npm run build-esm && npm run build-esm:min",
     "start": "mkdir -p public && cp ./_public/* public && concurrently --kill-others \"npm run start:party\" \"npx vite\"",
     "start:party": "partykit dev --config example_backend/partykit.json --port 1999",
     "toc": "markdown-toc --maxdepth 5 -i README.md",
@@ -52,9 +50,11 @@
     "prepublishOnly": "npm run build"
   },
   "dependencies": {
-    "@substrate-system/debug": "^0.9.23",
     "nanoevents": "^9.1.0",
     "partysocket": "^1.0.3"
+  },
+  "optionalDependencies": {
+    "@substrate-system/debug": "^0.9.23"
   },
   "devDependencies": {
     "@nichoth/components": "^0.16.16",

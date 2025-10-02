@@ -67,7 +67,7 @@ const Example:FunctionComponent<{
     const updateRoomId = useCallback((ev:InputEvent) => {
         const input = ev.target as HTMLInputElement
         state.roomId.value = input.value
-    }, [])
+    }, [state])
 
     /**
      * auto scroll in the message div

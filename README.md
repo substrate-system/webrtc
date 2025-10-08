@@ -29,6 +29,9 @@ peer? which peers exist? and did we get a new message?
   * [Servers](#servers)
   * [Websocket Server](#websocket-server)
   * [Client Example](#client-example)
+- [WebRTC](#webrtc)
+  * [Core Pieces](#core-pieces)
+  * [Typical connection flow](#typical-connection-flow)
 - [API](#api)
   * [Client-Side](#client-side)
     + [`connect`](#connect)
@@ -188,6 +191,39 @@ connection.on('peer', ([peerId, _dc]:[string, RTCDataChannel]) => {
     debug('new peer connection', peerId)
 })
 ```
+
+
+## WebRTC
+
+How does it work?
+
+### Core Pieces
+
+1. Signaling (out of scope for WebRTC itself).
+   This is done with websockets here.
+2. NAT Traversal with `ICE` (Interactive Connectivity Establishment)
+   * It gathers candidates: local IPs, STUN (public IP discovery),
+     TURN (relay server fallback)
+   * The peers try these candidates to establish a working path.
+3. `TLS-SRTP` Encryption &mdash; webrtc traffic is encrypted e2e.
+4. Data channels &mdash; arbitrary data transfer via `SCTP` over `DTLS`.
+5. Session Description Protocol (SDP)
+   * Describes codecs, resolutions, encryption keys, and network candidates.
+   * Exchanged in the signaling step as Offer and Answer.
+
+
+### Typical connection flow
+
+1. Peer A creates an RTCPeerConnection and calls `createOffer()`.
+2. Peer A sends its offer (SDP) to Peer B via a signaling server.
+3. Peer B receives the offer, calls `setRemoteDescription()`,
+   then `createAnswer()`.
+4. Peer B sends its answer (SDP) back through the signaling server.
+5. Both peers exchange ICE candidates until a working path is found.
+
+Once connected, peers send encrypted audio, video, or data directly.
+
+This uses [The perfect negotiation pattern](https://developer.mozilla.org/en-US/docs/Web/API/WebRTC_API/Perfect_negotiation#implementing_perfect_negotiation).
 
 
 ## API

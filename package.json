@@ -33,7 +33,7 @@
     "deploy:party": "partykit deploy",
     "test": "bash -c 'cd ./test && esbuild --platform=node --format=esm index.ts | node --input-type=module'",
     "test:browser": "concurrently --kill-others -s first \"npm run start:party\" \"wait-on http://localhost:1999/parties/main/test && npm run test:browser:js\"",
-    "test:browser:js": "esbuild --bundle ./test/browser/index.ts | npx tapout",
+    "test:browser:js": "esbuild --bundle --format=esm ./test/browser/index.ts | npx tapout",
     "test:playwright": "concurrently --kill-others -s first \"npm run start:party\" \"wait-on http://localhost:1999/parties/main/test && npx playwright test\"",
     "build-esm": "esbuild src/*.ts --format=esm --metafile=dist/meta.json --keep-names --tsconfig=tsconfig.build.json --outdir=./dist --sourcemap && tsc --emitDeclarationOnly --project tsconfig.build.json --outDir dist",
     "build-esm:min": "esbuild ./src/*.ts --format=esm --keep-names --bundle --tsconfig=tsconfig.build.json --minify --out-extension:.js=.min.js --outdir=./dist --sourcemap",

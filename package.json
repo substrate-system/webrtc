@@ -64,7 +64,7 @@
     "@substrate-system/tapout": "^0.0.28",
     "@substrate-system/tapzero": "^0.10.15",
     "@substrate-system/wait-on": "^8.0.3",
-    "@types/node": "^24.5.2",
+    "@types/node": "^25.0.3",
     "@typescript-eslint/eslint-plugin": "^8.18.2",
     "@typescript-eslint/parser": "^8.19.1",
     "auto-changelog": "^2.4.0",

@@ -78,7 +78,7 @@
     "markdown-toc": "^1.2.0",
     "partykit": "^0.0.114",
     "playwright": "^1.55.1",
-    "postcss-nesting": "^13.0.1",
+    "postcss-nesting": "^14.0.0",
     "preact": "^10.25.4",
     "stylelint": "^16.13.0",
     "stylelint-config-standard": "^40.0.0",

@@ -74,7 +74,7 @@
     "eslint": "^8.57.0",
     "eslint-config-standard": "^17.1.0",
     "htm": "^3.1.1",
-    "ky": "^1.7.4",
+    "ky": "^2.0.2",
     "markdown-toc": "^1.2.0",
     "partykit": "^0.0.114",
     "playwright": "^1.55.1",
